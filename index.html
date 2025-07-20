@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Takip Giriş</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #e0eafc, #cfdef3);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+    .login-container {
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+      border-radius: 16px;
+      padding: 40px 32px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 1.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .login-container h2 {
+      margin-bottom: 24px;
+      color: #333;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+    .login-container input {
+      width: 100%;
+      padding: 12px 10px;
+      margin-bottom: 18px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(200,200,200,0.18);
+      font-size: 1rem;
+      transition: box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      opacity: 0.85;
+    }
+    .login-container input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #a0c4ff;
+      background: rgba(255,255,255,0.95);
+      opacity: 1;
+    }
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #8ecae6;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0.92;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .login-container button:hover {
+      background: #219ebc;
+      opacity: 1;
+    }
+    .login-container .error, .login-container .success {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+    .login-container .error.show, .login-container .success.show {
+      display: block;
+      opacity: 1;
+    }
+    .login-container .error {
+      color: #d90429;
+      background: rgba(217, 4, 41, 0.1);
+      border: 1px solid rgba(217, 4, 41, 0.3);
+    }
+    .login-container .success {
+      color: #219e4c;
+      background: rgba(33, 158, 76, 0.1);
+      border: 1px solid rgba(33, 158, 76, 0.3);
+    }
+    .captcha-container {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .captcha-container input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      transform: scale(1.2);
+    }
+    .captcha-container label {
+      font-size: 0.9rem;
+      color: #333;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <form class="login-container" id="loginForm">
+    <h2>Ders Takip Giriş</h2>
+    <input type="text" id="username" placeholder="Kullanıcı Adı" required autocomplete="username">
+    <input type="password" id="password" placeholder="Şifre" required autocomplete="current-password">
+    <div class="error" id="errorMsg"></div>
+    <div class="success" id="successMsg"></div>
+    <div class="captcha-container">
+      <input type="checkbox" id="captcha" required>
+      <label for="captcha">Ben robot değilim</label>
+    </div>
+    <button type="submit">Giriş Yap</button>
+    <div style="margin-top: 18px; text-align: center; width: 100%;">
+      <a href="#" id="showSignup" style="color: #219ebc; text-decoration: underline; cursor: pointer; font-size: 0.98rem;">Üyelik Oluştur</a>
+    </div>
+  </form>
+  <form class="login-container" id="signupForm" style="display:none;">
+    <h2>Üyelik Oluştur</h2>
+    <input type="text" id="signupName" placeholder="Ad Soyad" required autocomplete="name">
+    <input type="text" id="signupUsername" placeholder="Kullanıcı Adı" required autocomplete="username">
+    <input type="password" id="signupPassword" placeholder="Şifre" required autocomplete="new-password">
+    <div id="passwordRules" style="color:#555; font-size:0.92rem; margin-bottom:8px; opacity:0.85;">Şifre en az 8 karakter, en az 1 büyük harf ve 1 rakam içermelidir.</div>
+    <input type="email" id="signupEmail" placeholder="E-posta (gmail)" required autocomplete="email">
+    <div class="error" id="signupErrorMsg"></div>
+    <div class="success" id="signupSuccessMsg"></div>
+    <div class="captcha-container">
+      <input type="checkbox" id="signupCaptcha" required>
+      <label for="signupCaptcha">Ben robot değilim</label>
+    </div>
+    <button type="submit">Kayıt Ol</button>
+    <button type="button" id="backToLogin" style="margin-top: 10px; background: #eee; color: #333;">Girişe Dön</button>
+    <div style="margin-top: 18px; text-align: center; width: 100%;">
+      <button type="button" id="gmailSignup" style="background: #fff; color: #444; border: 1px solid #ccc; border-radius: 6px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto;">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Gmail" style="width:20px; height:20px;"> Gmail ile Kayıt Ol
+      </button>
+    </div>
+  </form>
+  <div class="login-container" id="dashboard" style="display:none; flex-direction:column; align-items:center;">
+    <h2 id="dashboardTitle">Hoş geldin!</h2>
+    <div id="dashboardContent" style="margin: 24px 0; font-size: 1.1rem; color: #333; opacity: 0.85;">Başarıyla giriş yaptınız.</div>
+    <button id="logoutBtn" style="background: #d90429; color: #fff; margin-top: 12px;">Çıkış Yap</button>
+  </div>
+  <div id="studentDashboard" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); position:fixed; top:0; left:0; z-index:1000;">
+    <!-- Header -->
+    <div style="position:absolute; top:20px; left:20px; display:flex; align-items:center; gap:12px;">
+      <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">🐦</div>
+      <div style="color:#fff; font-weight:600; font-size:18px;">KIRDAR BİLGİÖREN KOLEJİ</div>
+    </div>
+    
+    <!-- Left Sidebar -->
+    <div style="position:absolute; left:20px; top:80px; display:flex; flex-direction:column; gap:15px;">
+      <div class="sidebar-btn" style="background:#ff6b35; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">📅</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Dersler</div>
+      </div>
+      <div class="sidebar-btn" style="background:#8fbc8f; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">🎓</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Notlar</div>
+      </div>
+      <div class="sidebar-btn" style="background:#ffb347; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">📚</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Ödevler</div>
+      </div>
+      <div class="sidebar-btn" style="background:#4a90e2; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">✏️</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Sınavlar</div>
+      </div>
+      <div class="sidebar-btn" style="background:#696969; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">🏆</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Gözlem - Davranış</div>
+      </div>
+    </div>
+    
+    <!-- Center Student Profile -->
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:25px; padding:40px; width:300px; height:400px; display:flex; flex-direction:column; align-items:center; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+      <div style="width:120px; height:120px; border-radius:50%; background:#e0e0e0; display:flex; align-items:center; justify-content:center; font-size:60px; margin-bottom:20px;">👦</div>
+      <div id="studentName" style="font-size:24px; font-weight:600; color:#333; text-align:center;">Kuthan Özel</div>
+      <div style="font-size:16px; color:#666; margin-top:8px;">Öğrenci</div>
+    </div>
+    
+    <!-- Right Sidebar -->
+    <div style="position:absolute; right:20px; top:80px; display:flex; flex-direction:column; gap:15px;">
+      <div class="sidebar-btn" style="background:#32cd32; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2); position:relative;">
+        <div style="font-size:24px;">✉️</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Mesajlar</div>
+      </div>
+      <div class="sidebar-btn" style="background:#ff4444; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">👨‍🏫</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Etütler</div>
+      </div>
+      <div class="sidebar-btn" style="background:linear-gradient(45deg, #ffff00, #32cd32); border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#333; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">📅</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Ajanda</div>
+        <div style="font-size:12px; margin-top:4px;">14</div>
+      </div>
+      <div class="sidebar-btn" style="background:#9370db; border-radius:15px; padding:20px; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div style="font-size:24px;">👤</div>
+        <div style="font-size:14px; font-weight:600; margin-top:8px;">Devamsızlık</div>
+      </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:20px; background:rgba(255,255,255,0.9); border-radius:20px; padding:15px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#4a90e2; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">📊</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Konular</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#ffd700; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">🏆</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Başarılarım</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#8b4513; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">📚</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Kütüphane</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#ff6b35; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">🏀</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Kulüpler</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#ff69b4; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">❤️</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Sağlık</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#32cd32; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">🚌</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Öğrenci Servisi</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#9370db; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">💻</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Online Sınavlar</div>
+      </div>
+      <div class="nav-item" style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+        <div style="width:40px; height:40px; background:#696969; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">🖱️</div>
+        <div style="font-size:10px; color:#333; margin-top:4px;">Online Hizmetler</div>
+      </div>
+    </div>
+    
+    <!-- Logout Button -->
+    <button id="studentLogoutBtn" style="position:absolute; top:20px; right:20px; background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+  </div>
+  
+  <!-- Dersler Sayfası -->
+  <div id="derslerPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">📅 Dersler</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#ff6b35; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="derslerLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📄</div>
+      <h2 style="color:#333; margin-bottom:20px;">Dersler Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada PDF dosyaları ve ders materyalleri görüntülenecek.</p>
+      <div style="margin-top:30px; padding:20px; background:#f0f0f0; border-radius:10px;">
+        <p style="color:#333; font-weight:600;">PDF yükleme alanı burada olacak</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Notlar Sayfası -->
+  <div id="notlarPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #8fbc8f 0%, #228b22 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">🎓 Notlar</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#8fbc8f; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="notlarLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📊</div>
+      <h2 style="color:#333; margin-bottom:20px;">Notlar Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada öğrenci notları ve başarı grafikleri görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Ödevler Sayfası -->
+  <div id="odevlerPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #ffb347 0%, #ff8c00 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">📚 Ödevler</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#ffb347; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="odevlerLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📝</div>
+      <h2 style="color:#333; margin-bottom:20px;">Ödevler Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada ödev listesi ve teslim tarihleri görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Sınavlar Sayfası -->
+  <div id="sinavlarPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #4a90e2 0%, #357abd 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">✏️ Sınavlar</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#4a90e2; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="sinavlarLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📋</div>
+      <h2 style="color:#333; margin-bottom:20px;">Sınavlar Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada sınav programı ve sonuçları görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Mesajlar Sayfası -->
+  <div id="mesajlarPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #32cd32 0%, #228b22 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">✉️ Mesajlar</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#32cd32; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="mesajlarLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">💬</div>
+      <h2 style="color:#333; margin-bottom:20px;">Mesajlar Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada öğretmen ve veli mesajları görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Gözlem-Davranış Sayfası -->
+  <div id="gözlemPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #696969 0%, #2f4f4f 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">🏆 Gözlem - Davranış</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#696969; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="gözlemLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📊</div>
+      <h2 style="color:#333; margin-bottom:20px;">Gözlem - Davranış Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada öğrenci davranış değerlendirmeleri ve gözlem raporları görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Etütler Sayfası -->
+  <div id="etutlerPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #ff4444 0%, #cc0000 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">👨‍🏫 Etütler</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#ff4444; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="etutlerLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📚</div>
+      <h2 style="color:#333; margin-bottom:20px;">Etütler Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada etüt programı ve özel ders bilgileri görüntülenecek.</p>
+    </div>
+  </div>
+  
+  <!-- Ajanda Sayfası -->
+  <div id="ajandaPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #ffff00 0%, #32cd32 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#333; font-size:24px; font-weight:600;">📅 Ajanda</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#32cd32; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="ajandaLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.95); border-radius:20px; padding:40px; width:90%; max-width:800px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+      <div style="font-size:48px; margin-bottom:20px;">📆</div>
+      <h2 style="color:#333; margin-bottom:20px;">Ajanda Sayfası</h2>
+      
+      <!-- Canlı Tarih ve Saat -->
+      <div id="liveDateTime" style="background:linear-gradient(45deg, #32cd32, #ffff00); color:#333; padding:15px; border-radius:15px; margin-bottom:30px; font-weight:600; font-size:18px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <div id="currentDate"></div>
+        <div id="currentTime" style="font-size:24px; margin-top:5px;"></div>
+      </div>
+      
+      <!-- Takvim -->
+      <div id="calendar" style="background:#f8f9fa; border-radius:15px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+        <div id="calendarHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <button id="prevMonth" style="background:#32cd32; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">‹</button>
+          <h3 id="monthYear" style="color:#333; font-size:20px; font-weight:600; margin:0;"></h3>
+          <button id="nextMonth" style="background:#32cd32; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">›</button>
+        </div>
+        
+        <!-- Haftanın günleri -->
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; margin-bottom:10px;">
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Pzt</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Sal</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Çar</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Per</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Cum</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Cmt</div>
+          <div style="text-align:center; font-weight:600; color:#666; padding:10px;">Paz</div>
+        </div>
+        
+        <!-- Takvim günleri -->
+        <div id="calendarDays" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Devamsızlık Sayfası -->
+  <div id="devamsizlikPage" style="display:none; width:100vw; height:100vh; background:linear-gradient(135deg, #9370db 0%, #4b0082 100%); position:fixed; top:0; left:0; z-index:1001;">
+    <div style="position:absolute; top:20px; left:20px; color:#fff; font-size:24px; font-weight:600;">👤 Devamsızlık</div>
+    <div style="position:absolute; top:20px; right:20px;">
+      <button class="backBtn" style="background:#fff; color:#9370db; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600; margin-right:10px;">Geri</button>
+      <button id="devamsizlikLogoutBtn" style="background:#ff4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;">Çıkış</button>
+    </div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.9); border-radius:20px; padding:40px; width:80%; max-width:600px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:20px;">📊</div>
+      <h2 style="color:#333; margin-bottom:20px;">Devamsızlık Sayfası</h2>
+      <p style="color:#666; font-size:18px;">Burada devamsızlık takibi ve izin bilgileri görüntülenecek.</p>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const captchaCheckbox = document.getElementById('captcha');
+    
+    function showMessage(type, message) {
+      if (type === 'success') {
+        successMsg.textContent = message;
+        successMsg.classList.add('show');
+        errorMsg.classList.remove('show');
+        setTimeout(() => {
+          successMsg.classList.remove('show');
+        }, 3000);
+      } else {
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+        setTimeout(() => {
+          errorMsg.classList.remove('show');
+        }, 3000);
+      }
+    }
+    
+    function showDashboard(name) {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('studentDashboard').style.display = 'block';
+      document.getElementById('studentName').textContent = name || 'Öğrenci';
+    }
+    
+    document.getElementById('logoutBtn').onclick = function() {
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!captchaCheckbox.checked) {
+        showMessage('error', 'Lütfen robot doğrulamasını tamamlayın!');
+        return;
+      }
+      
+      errorMsg.textContent = '';
+      successMsg.textContent = '';
+      errorMsg.classList.remove('show');
+      successMsg.classList.remove('show');
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        const res = await fetch('http://localhost:3001/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('success', 'Giriş başarılı!');
+          setTimeout(() => {
+            showDashboard(data.name || username);
+          }, 1000);
+          form.reset();
+        } else {
+          showMessage('error', 'Giriş başarısız!');
+          captchaCheckbox.checked = false;
+        }
+      } catch (err) {
+        showMessage('error', 'Sunucuya bağlanılamadı.');
+        captchaCheckbox.checked = false;
+      }
+    });
+
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    document.getElementById('showSignup').onclick = function() {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'flex';
+    };
+    document.getElementById('backToLogin').onclick = function() {
+      signupForm.style.display = 'none';
+      loginForm.style.display = 'flex';
+    };
+    document.getElementById('gmailSignup').onclick = function() {
+      alert('Gmail ile üyelik oluşturma özelliği yakında eklenecek!');
+    };
+    
+    signupForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('signupName').value;
+      const username = document.getElementById('signupUsername').value;
+      const password = document.getElementById('signupPassword').value;
+      const email = document.getElementById('signupEmail').value;
+      const captcha = document.getElementById('signupCaptcha').checked;
+      const errorMsg = document.getElementById('signupErrorMsg');
+      const successMsg = document.getElementById('signupSuccessMsg');
+      errorMsg.textContent = '';
+      successMsg.textContent = '';
+      errorMsg.classList.remove('show');
+      successMsg.classList.remove('show');
+      if (!captcha) {
+        errorMsg.textContent = 'Lütfen robot doğrulamasını tamamlayın!';
+        errorMsg.classList.add('show');
+        return;
+      }
+      if (!email.endsWith('@gmail.com')) {
+        errorMsg.textContent = 'Sadece gmail adresi ile kayıt olabilirsiniz!';
+        errorMsg.classList.add('show');
+        return;
+      }
+      const passwordValid = password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+      if (!passwordValid) {
+        errorMsg.textContent = 'Şifre en az 8 karakter, en az 1 büyük harf ve 1 rakam içermelidir!';
+        errorMsg.classList.add('show');
+        return;
+      }
+      successMsg.textContent = 'Kayıt başarılı! (Demo)';
+      successMsg.classList.add('show');
+      signupForm.reset();
+      setTimeout(() => {
+        successMsg.classList.remove('show');
+        showDashboard(name);
+      }, 1000);
+    });
+
+    document.getElementById('studentLogoutBtn').onclick = function() {
+      document.getElementById('studentDashboard').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    
+    // Sidebar butonlarına tıklama olayları
+    document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
+      btn.addEventListener('click', function() {
+        const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
+        const pageName = pages[index];
+        if (pageName) {
+          document.getElementById('studentDashboard').style.display = 'none';
+          document.getElementById(pageName).style.display = 'block';
+        }
+      });
+    });
+    
+    // Geri butonlarına tıklama olayları
+    document.querySelectorAll('.backBtn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('[id$="Page"]').forEach(page => {
+          page.style.display = 'none';
+        });
+        document.getElementById('studentDashboard').style.display = 'block';
+      });
+    });
+    
+    // Sayfa çıkış butonları
+    document.getElementById('derslerLogoutBtn').onclick = function() {
+      document.getElementById('derslerPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('notlarLogoutBtn').onclick = function() {
+      document.getElementById('notlarPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('odevlerLogoutBtn').onclick = function() {
+      document.getElementById('odevlerPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('sinavlarLogoutBtn').onclick = function() {
+      document.getElementById('sinavlarPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('mesajlarLogoutBtn').onclick = function() {
+      document.getElementById('mesajlarPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('gözlemLogoutBtn').onclick = function() {
+      document.getElementById('gözlemPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('etutlerLogoutBtn').onclick = function() {
+      document.getElementById('etutlerPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('ajandaLogoutBtn').onclick = function() {
+      document.getElementById('ajandaPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+    document.getElementById('devamsizlikLogoutBtn').onclick = function() {
+      document.getElementById('devamsizlikPage').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    };
+
+    // Takvim fonksiyonları
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+    
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        timeZone: 'Europe/Istanbul'
+      };
+      
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('tr-TR', options);
+      document.getElementById('currentTime').textContent = now.toLocaleTimeString('tr-TR', timeOptions);
+    }
+    
+    function generateCalendar(month, year) {
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+      
+      const monthNames = [
+        'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      ];
+      
+      document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
+      
+      const calendarDays = document.getElementById('calendarDays');
+      calendarDays.innerHTML = '';
+      
+      const today = new Date();
+      
+      for (let i = 0; i < 42; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        
+        const dayElement = document.createElement('div');
+        dayElement.style.cssText = `
+          text-align: center;
+          padding: 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-weight: 500;
+        `;
+        
+        const dayNumber = date.getDate();
+        dayElement.textContent = dayNumber;
+        
+        // Bugünün tarihi
+        if (date.toDateString() === today.toDateString()) {
+          dayElement.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
+          dayElement.style.color = '#333';
+          dayElement.style.fontWeight = 'bold';
+          dayElement.style.transform = 'scale(1.1)';
+        }
+        // Bu ayın günleri
+        else if (date.getMonth() === month) {
+          dayElement.style.background = '#fff';
+          dayElement.style.color = '#333';
+        }
+        // Diğer ayların günleri
+        else {
+          dayElement.style.background = '#f0f0f0';
+          dayElement.style.color = '#999';
+        }
+        
+        dayElement.addEventListener('mouseenter', function() {
+          if (date.getMonth() === month) {
+            this.style.background = '#e8f5e8';
+            this.style.transform = 'scale(1.05)';
+          }
+        });
+        
+        dayElement.addEventListener('mouseleave', function() {
+          if (date.toDateString() === today.toDateString()) {
+            this.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
+          } else if (date.getMonth() === month) {
+            this.style.background = '#fff';
+          }
+          this.style.transform = date.toDateString() === today.toDateString() ? 'scale(1.1)' : 'scale(1)';
+        });
+        
+        calendarDays.appendChild(dayElement);
+      }
+    }
+    
+    // Takvim kontrolleri
+    document.getElementById('prevMonth').addEventListener('click', function() {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      generateCalendar(currentMonth, currentYear);
+    });
+    
+    document.getElementById('nextMonth').addEventListener('click', function() {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      generateCalendar(currentMonth, currentYear);
+    });
+    
+    // Sayfa açıldığında takvimi başlat
+    document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
+      btn.addEventListener('click', function() {
+        const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
+        const pageName = pages[index];
+        if (pageName) {
+          document.getElementById('studentDashboard').style.display = 'none';
+          document.querySelectorAll('[id$="Page"]').forEach(page => {
+            page.style.display = 'none';
+          });
+          document.getElementById(pageName).style.display = 'block';
+          
+          // Ajanda sayfası açıldığında takvimi başlat
+          if (pageName === 'ajandaPage') {
+            generateCalendar(currentMonth, currentYear);
+            updateDateTime();
+            setInterval(updateDateTime, 1000); // Her saniye güncelle
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html> 
