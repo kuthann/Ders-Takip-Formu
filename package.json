@@ -1,14 +1,30 @@
 {
-  "name": "ders-takip-uygulamasi",
+  "name": "ogrenci-takip-sistemi",
   "version": "1.0.0",
+  "description": "Öğrenci Takip Sistemi - Supabase Entegrasyonu",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Build completed'",
+    "test": "echo 'No tests specified'"
   },
+  "keywords": [
+    "ogrenci",
+    "takip",
+    "sinav",
+    "supabase",
+    "education"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "bcrypt": "^5.1.0",
-    "body-parser": "^1.20.2"
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 } 

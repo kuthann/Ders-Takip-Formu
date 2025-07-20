@@ -1,37 +1,30 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-
+const path = require('path');
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(bodyParser.json());
+// Static dosyaları serve et
+app.use(express.static(path.join(__dirname, '.')));
 
-// Basit kullanıcı listesi
-const users = [
-  {
-    username: 'k1',
-    passwordHash: bcrypt.hashSync('k2', 10),
-    name: 'Oğlum',
-  }
-];
+// Ana sayfa
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-// Giriş endpoint'i
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username);
-  if (!user) {
-    return res.status(401).json({ message: 'Kullanıcı adı veya şifre hatalı.' });
-  }
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
-    return res.status(401).json({ message: 'Kullanıcı adı veya şifre hatalı.' });
-  }
-  res.json({ message: 'Giriş başarılı', username: user.username, name: user.name });
+// Tüm route'ları index.html'e yönlendir (SPA için)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Sunucu çalışıyor: http://localhost:${PORT}`);
+    console.log(`📱 Mobil test: http://192.168.1.X:${PORT} (IP adresinizi değiştirin)`);
+    console.log(`🌐 Dış erişim: http://sunucu-ip:${PORT}`);
+});
+
+// CORS ayarları (gerekirse)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
 }); 
