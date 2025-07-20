@@ -759,17 +759,30 @@
     }
     
     function showDashboard(name) {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('signupForm').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'none';
-      document.getElementById('studentDashboard').style.display = 'block';
-      document.getElementById('studentName').textContent = name || 'Öğrenci';
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const dashboard = document.getElementById('dashboard');
+      const studentDashboard = document.getElementById('studentDashboard');
+      const studentName = document.getElementById('studentName');
+      
+      if (loginForm) loginForm.style.display = 'none';
+      if (registerForm) registerForm.style.display = 'none';
+      if (dashboard) dashboard.style.display = 'none';
+      if (studentDashboard) studentDashboard.style.display = 'block';
+      if (studentName) studentName.textContent = name || 'Öğrenci';
     }
     
-    document.getElementById('logoutBtn').onclick = function() {
-      document.getElementById('dashboard').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
+    // Logout fonksiyonu güvenli hale getirildi
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.onclick = function() {
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('loginForm');
+        
+        if (dashboard) dashboard.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'flex';
+      };
+    }
 
     // Sayfa yüklendiğinde kaydedilmiş bilgileri kontrol et
     window.addEventListener('load', function() {
@@ -840,13 +853,19 @@
     
     // Form gösterme fonksiyonları
     function showRegisterForm() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('registerForm').style.display = 'flex';
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      
+      if (loginForm) loginForm.style.display = 'none';
+      if (registerForm) registerForm.style.display = 'flex';
     }
     
     function showLoginForm() {
-      document.getElementById('registerForm').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      
+      if (registerForm) registerForm.style.display = 'none';
+      if (loginForm) loginForm.style.display = 'flex';
     }
     
     form.addEventListener('submit', async (e) => {
