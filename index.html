@@ -191,27 +191,7 @@
     <button type="button" onclick="register()">Hesap Oluştur</button>
     <button type="button" onclick="showLoginForm()" style="margin-top: 10px; background: #eee; color: #333;">Giriş Sayfasına Dön</button>
   </form>
-  <form class="login-container" id="signupForm" style="display:none;">
-    <h2>Üyelik Oluştur</h2>
-    <input type="text" id="signupName" placeholder="Ad Soyad" required autocomplete="name">
-    <input type="text" id="signupUsername" placeholder="Kullanıcı Adı" required autocomplete="username">
-    <input type="password" id="signupPassword" placeholder="Şifre" required autocomplete="new-password">
-    <div id="passwordRules" style="color:#555; font-size:0.92rem; margin-bottom:8px; opacity:0.85;">Şifre en az 8 karakter, en az 1 büyük harf ve 1 rakam içermelidir.</div>
-    <input type="email" id="signupEmail" placeholder="E-posta (gmail)" required autocomplete="email">
-    <div class="error" id="signupErrorMsg"></div>
-    <div class="success" id="signupSuccessMsg"></div>
-    <div class="captcha-container">
-      <input type="checkbox" id="signupCaptcha" required>
-      <label for="signupCaptcha">Ben robot değilim</label>
-    </div>
-    <button type="submit">Kayıt Ol</button>
-    <button type="button" id="backToLogin" style="margin-top: 10px; background: #eee; color: #333;">Girişe Dön</button>
-    <div style="margin-top: 18px; text-align: center; width: 100%;">
-      <button type="button" id="gmailSignup" style="background: #fff; color: #444; border: 1px solid #ccc; border-radius: 6px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto;">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Gmail" style="width:20px; height:20px;"> Gmail ile Kayıt Ol
-      </button>
-    </div>
-  </form>
+  <!-- Eski signup form kaldırıldı - yeni register sistemi kullanılıyor -->
   <div class="login-container" id="dashboard" style="display:none; flex-direction:column; align-items:center;">
     <h2 id="dashboardTitle">Hoş geldin!</h2>
     <div id="dashboardContent" style="margin: 24px 0; font-size: 1.1rem; color: #333; opacity: 0.85;">Başarıyla giriş yaptınız.</div>
@@ -919,61 +899,12 @@
         }
       } catch (err) {
         showMessage('error', 'Sunucuya bağlanılamadı.');
-        captchaCheckbox.checked = false;
+        const robotCheck = document.getElementById('robotCheck');
+        if (robotCheck) robotCheck.checked = false;
       }
     });
-
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    document.getElementById('showSignup').onclick = function() {
-      loginForm.style.display = 'none';
-      signupForm.style.display = 'flex';
-    };
-    document.getElementById('backToLogin').onclick = function() {
-      signupForm.style.display = 'none';
-      loginForm.style.display = 'flex';
-    };
-    document.getElementById('gmailSignup').onclick = function() {
-      alert('Gmail ile üyelik oluşturma özelliği yakında eklenecek!');
-    };
     
-    signupForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = document.getElementById('signupName').value;
-      const username = document.getElementById('signupUsername').value;
-      const password = document.getElementById('signupPassword').value;
-      const email = document.getElementById('signupEmail').value;
-      const captcha = document.getElementById('signupCaptcha').checked;
-      const errorMsg = document.getElementById('signupErrorMsg');
-      const successMsg = document.getElementById('signupSuccessMsg');
-      errorMsg.textContent = '';
-      successMsg.textContent = '';
-      errorMsg.classList.remove('show');
-      successMsg.classList.remove('show');
-      if (!captcha) {
-        errorMsg.textContent = 'Lütfen robot doğrulamasını tamamlayın!';
-        errorMsg.classList.add('show');
-        return;
-      }
-      if (!email.endsWith('@gmail.com')) {
-        errorMsg.textContent = 'Sadece gmail adresi ile kayıt olabilirsiniz!';
-        errorMsg.classList.add('show');
-        return;
-      }
-      const passwordValid = password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
-      if (!passwordValid) {
-        errorMsg.textContent = 'Şifre en az 8 karakter, en az 1 büyük harf ve 1 rakam içermelidir!';
-        errorMsg.classList.add('show');
-        return;
-      }
-      successMsg.textContent = 'Kayıt başarılı! (Demo)';
-      successMsg.classList.add('show');
-      signupForm.reset();
-      setTimeout(() => {
-        successMsg.classList.remove('show');
-        showDashboard(name);
-      }, 1000);
-    });
+    // Eski signup form kodu kaldırıldı - yeni register sistemi kullanılıyor
 
     document.getElementById('studentLogoutBtn').onclick = function() {
       document.getElementById('studentDashboard').style.display = 'none';
