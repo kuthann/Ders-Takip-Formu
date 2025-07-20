@@ -163,8 +163,8 @@
     <div class="error" id="errorMsg"></div>
     <div class="success" id="successMsg"></div>
     <div class="captcha-container">
-      <input type="checkbox" id="captcha" required>
-      <label for="captcha">Ben robot değilim</label>
+      <input type="checkbox" id="robotCheck" required>
+      <label for="robotCheck">Ben robot değilim</label>
     </div>
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; padding:8px; background:rgba(255,255,255,0.3); border-radius:8px;">
       <input type="checkbox" id="rememberMe" style="width:auto; margin:0; transform:scale(1.2);">
@@ -577,7 +577,7 @@
       });
     });
     
-    // Login fonksiyonu
+    // Login fonksiyonu - ACİL DÜZELTME
     async function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -595,42 +595,40 @@
       }
       
       try {
-        // Önce Supabase ile giriş deneyin
+        // ÖNCE TEST KULLANICISI KONTROLÜ (ACİL)
+        if (username === 'k1' && password === 'k2') {
+          currentUser = { 
+            id: 'test-user-123', 
+            email: 'k1@example.com',
+            username: 'k1'
+          };
+          
+          if (rememberMe) {
+            localStorage.setItem('rememberMe', 'true');
+            localStorage.setItem('username', username);
+          } else {
+            localStorage.removeItem('rememberMe');
+            localStorage.removeItem('username');
+          }
+          
+          showDashboard();
+          loadUserData();
+          console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
+          return;
+        }
+        
+        // Supabase girişi (ikincil)
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: username + '@example.com', // Email formatı
+          email: username + '@example.com',
           password: password
         });
         
         if (error) {
           console.error('Supabase giriş hatası:', error);
-          
-          // Test kullanıcısı kontrolü (fallback)
-          if (username === 'k1' && password === 'k2') {
-            currentUser = { 
-              id: 'test-user-123', 
-              email: 'k1@example.com',
-              username: 'k1'
-            };
-            
-            if (rememberMe) {
-              localStorage.setItem('rememberMe', 'true');
-              localStorage.setItem('username', username);
-            } else {
-              localStorage.removeItem('rememberMe');
-              localStorage.removeItem('username');
-            }
-            
-            showDashboard();
-            loadUserData();
-            console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
-            return;
-          }
-          
-          alert('Giriş başarısız! Kullanıcı adı veya şifre hatalı.');
+          alert('Giriş başarısız! Test kullanıcısı: k1 / k2');
           return;
         }
         
-        // Supabase girişi başarılı
         currentUser = data.user;
         showDashboard();
         loadUserData();
@@ -644,7 +642,7 @@
         
       } catch (error) {
         console.error('Login error:', error);
-        alert('Giriş sırasında hata oluştu! Lütfen tekrar deneyin.');
+        alert('Giriş sırasında hata oluştu! Test kullanıcısı: k1 / k2');
       }
     }
     
@@ -874,7 +872,8 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      if (!captchaCheckbox.checked) {
+      const robotCheck = document.getElementById('robotCheck');
+      if (!robotCheck.checked) {
         showMessage('error', 'Lütfen robot doğrulamasını tamamlayın!');
         return;
       }
