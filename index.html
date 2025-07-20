@@ -878,30 +878,8 @@
         localStorage.removeItem('rememberMe');
       }
       
-      try {
-        const res = await fetch('http://localhost:3001/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          showMessage('success', 'Giriş başarılı!');
-          setTimeout(() => {
-            showDashboard(data.name || username);
-          }, 1000);
-          form.reset();
-          // Giriş başarılı olduktan sonra checkbox'ı temizleme
-          document.getElementById('rememberMe').checked = false;
-        } else {
-          showMessage('error', 'Giriş başarısız!');
-          captchaCheckbox.checked = false;
-        }
-      } catch (err) {
-        showMessage('error', 'Sunucuya bağlanılamadı.');
-        const robotCheck = document.getElementById('robotCheck');
-        if (robotCheck) robotCheck.checked = false;
-      }
+      // Yeni login sistemi kullanılıyor - eski server kodu kaldırıldı
+      await login();
     });
     
     // Eski signup form kodu kaldırıldı - yeni register sistemi kullanılıyor
