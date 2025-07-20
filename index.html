@@ -172,8 +172,24 @@
     </div>
     <button type="submit">Giriş Yap</button>
     <div style="margin-top: 18px; text-align: center; width: 100%;">
-      <a href="#" id="showSignup" style="color: #219ebc; text-decoration: underline; cursor: pointer; font-size: 0.98rem;">Üyelik Oluştur</a>
+      <button type="button" onclick="showRegisterForm()" style="background: none; border: none; color: #219ebc; text-decoration: underline; cursor: pointer; font-size: 0.98rem;">Yeni Hesap Oluştur</button>
     </div>
+  </form>
+  
+  <!-- Kayıt Formu -->
+  <form class="login-container" id="registerForm" style="display:none;">
+    <h2>Yeni Hesap Oluştur</h2>
+    <input type="text" id="regUsername" placeholder="Kullanıcı Adı" required autocomplete="username">
+    <input type="password" id="regPassword" placeholder="Şifre (en az 6 karakter)" required autocomplete="new-password">
+    <input type="password" id="regPasswordConfirm" placeholder="Şifre Tekrar" required autocomplete="new-password">
+    <div class="error" id="regErrorMsg"></div>
+    <div class="success" id="regSuccessMsg"></div>
+    <div class="captcha-container">
+      <input type="checkbox" id="regRobotCheck" required>
+      <label for="regRobotCheck">Ben robot değilim</label>
+    </div>
+    <button type="button" onclick="register()">Hesap Oluştur</button>
+    <button type="button" onclick="showLoginForm()" style="margin-top: 10px; background: #eee; color: #333;">Giriş Sayfasına Dön</button>
   </form>
   <form class="login-container" id="signupForm" style="display:none;">
     <h2>Üyelik Oluştur</h2>
@@ -579,44 +595,42 @@
       }
       
       try {
-        // Test kullanıcısı kontrolü
-        if (username === 'k1' && password === 'k2') {
-          // Test kullanıcısı için özel giriş
-          currentUser = { 
-            id: 'test-user-123', 
-            email: 'k1@example.com',
-            username: 'k1'
-          };
-          
-          // Remember me kontrolü
-          if (rememberMe) {
-            localStorage.setItem('rememberMe', 'true');
-            localStorage.setItem('username', username);
-          } else {
-            localStorage.removeItem('rememberMe');
-            localStorage.removeItem('username');
-          }
-          
-          // Dashboard'u göster
-          showDashboard();
-          loadUserData();
-          
-          console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
-          return;
-        }
-        
-        // Gerçek Supabase girişi (gelecekte kullanılacak)
+        // Önce Supabase ile giriş deneyin
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: username + '@example.com', // Geçici email formatı
+          email: username + '@example.com', // Email formatı
           password: password
         });
         
         if (error) {
           console.error('Supabase giriş hatası:', error);
-          alert('Giriş başarısız! Şu anda sadece test kullanıcısı (k1/k2) ile giriş yapabilirsiniz.');
+          
+          // Test kullanıcısı kontrolü (fallback)
+          if (username === 'k1' && password === 'k2') {
+            currentUser = { 
+              id: 'test-user-123', 
+              email: 'k1@example.com',
+              username: 'k1'
+            };
+            
+            if (rememberMe) {
+              localStorage.setItem('rememberMe', 'true');
+              localStorage.setItem('username', username);
+            } else {
+              localStorage.removeItem('rememberMe');
+              localStorage.removeItem('username');
+            }
+            
+            showDashboard();
+            loadUserData();
+            console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
+            return;
+          }
+          
+          alert('Giriş başarısız! Kullanıcı adı veya şifre hatalı.');
           return;
         }
         
+        // Supabase girişi başarılı
         currentUser = data.user;
         showDashboard();
         loadUserData();
@@ -791,6 +805,71 @@
         document.getElementById('rememberMe').checked = true;
       }
     });
+    
+    // Kayıt fonksiyonu
+    async function register() {
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+      const robotCheck = document.getElementById('regRobotCheck').checked;
+      
+      if (!username || !password || !passwordConfirm) {
+        alert('Tüm alanları doldurun!');
+        return;
+      }
+      
+      if (password !== passwordConfirm) {
+        alert('Şifreler eşleşmiyor!');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Şifre en az 6 karakter olmalıdır!');
+        return;
+      }
+      
+      if (!robotCheck) {
+        alert('Robot olmadığınızı doğrulayın!');
+        return;
+      }
+      
+      try {
+        // Supabase ile kayıt
+        const { data, error } = await supabase.auth.signUp({
+          email: username + '@example.com',
+          password: password,
+          options: {
+            data: {
+              username: username
+            }
+          }
+        });
+        
+        if (error) {
+          console.error('Kayıt hatası:', error);
+          alert('Kayıt başarısız! ' + error.message);
+          return;
+        }
+        
+        alert('Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+        showLoginForm();
+        
+      } catch (error) {
+        console.error('Kayıt error:', error);
+        alert('Kayıt sırasında hata oluştu!');
+      }
+    }
+    
+    // Form gösterme fonksiyonları
+    function showRegisterForm() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'flex';
+    }
+    
+    function showLoginForm() {
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'flex';
+    }
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
