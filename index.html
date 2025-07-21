@@ -512,935 +512,701 @@
     </div>
   </div>
   <script>
-    // Supabase bağlantısı
-    const supabaseUrl = 'https://xblcsqbzpauodxxprrhf.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibGNzcWJ6cGF1b2R4eHBycmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNDMzOTcsImV4cCI6MjA2ODYxOTM5N30.KR5jMv74XChnnEH8_nCsHhPYIFq_y536_jo3GrhD5pY';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    
-    // Kullanıcı durumu
-    let currentUser = null;
-    
-    // Sayfa yüklendiğinde kullanıcı kontrolü
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Remember me kontrolü
-      const remembered = localStorage.getItem('rememberMe');
-      const savedUsername = localStorage.getItem('username');
+    document.addEventListener('DOMContentLoaded', function() {
+      // Supabase bağlantısı
+      const supabaseUrl = 'https://xblcsqbzpauodxxprrhf.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibGNzcWJ6cGF1b2R4eHBycmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNDMzOTcsImV4cCI6MjA2ODYxOTM5N30.KR5jMv74XChnnEH8_nCsHhPYIFq_y536_jo3GrhD5pY';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
       
-      if (remembered && savedUsername) {
-        document.getElementById('username').value = savedUsername;
-        document.getElementById('rememberMe').checked = true;
-      }
+      // Kullanıcı durumu
+      let currentUser = null;
       
-      // Mevcut oturum kontrolü
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        currentUser = session.user;
-        showDashboard();
-        loadUserData();
-        console.log('Mevcut oturum bulundu:', currentUser);
-      } else {
-        showLoginForm();
-        console.log('Oturum bulunamadı, giriş formu gösteriliyor');
-      }
-      
-      // Auth durumu değişikliklerini dinle
-      supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event, session);
-        if (event === 'SIGNED_IN') {
+      // Sayfa yüklendiğinde kullanıcı kontrolü
+      document.addEventListener('DOMContentLoaded', async function() {
+        // Remember me kontrolü
+        const remembered = localStorage.getItem('rememberMe');
+        const savedUsername = localStorage.getItem('username');
+        
+        if (remembered && savedUsername) {
+          document.getElementById('username').value = savedUsername;
+          document.getElementById('rememberMe').checked = true;
+        }
+        
+        // Mevcut oturum kontrolü
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
           currentUser = session.user;
           showDashboard();
           loadUserData();
-        } else if (event === 'SIGNED_OUT') {
-          currentUser = null;
+          console.log('Mevcut oturum bulundu:', currentUser);
+        } else {
           showLoginForm();
+          console.log('Oturum bulunamadı, giriş formu gösteriliyor');
         }
+        
+        // Auth durumu değişikliklerini dinle
+        supabase.auth.onAuthStateChange((event, session) => {
+          console.log('Auth state changed:', event, session);
+          if (event === 'SIGNED_IN') {
+            currentUser = session.user;
+            showDashboard();
+            loadUserData();
+          } else if (event === 'SIGNED_OUT') {
+            currentUser = null;
+            showLoginForm();
+          }
+        });
       });
-    });
-    
-    // Login fonksiyonu - ACİL DÜZELTME
-    async function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const robotCheck = document.getElementById('robotCheck').checked;
-      const rememberMe = document.getElementById('rememberMe').checked;
       
-      if (!username || !password) {
-        alert('Kullanıcı adı ve şifre gerekli!');
-        return;
-      }
-      
-      if (!robotCheck) {
-        alert('Robot olmadığınızı doğrulayın!');
-        return;
-      }
-      
-      try {
-        // ÖNCE TEST KULLANICISI KONTROLÜ (ACİL)
-        if (username === 'k1' && password === 'k2') {
-          currentUser = { 
-            id: 'test-user-123', 
-            email: 'k1@example.com',
-            username: 'k1'
-          };
+      // Login fonksiyonu - ACİL DÜZELTME
+      async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const robotCheck = document.getElementById('robotCheck').checked;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        
+        if (!username || !password) {
+          alert('Kullanıcı adı ve şifre gerekli!');
+          return;
+        }
+        
+        if (!robotCheck) {
+          alert('Robot olmadığınızı doğrulayın!');
+          return;
+        }
+        
+        try {
+          // ÖNCE TEST KULLANICISI KONTROLÜ (ACİL)
+          if (username === 'k1' && password === 'k2') {
+            currentUser = { 
+              id: 'test-user-123', 
+              email: 'k1@example.com',
+              username: 'k1'
+            };
+            
+            if (rememberMe) {
+              localStorage.setItem('rememberMe', 'true');
+              localStorage.setItem('username', username);
+            } else {
+              localStorage.removeItem('rememberMe');
+              localStorage.removeItem('username');
+            }
+            
+            showDashboard();
+            loadUserData();
+            console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
+            return;
+          }
+          
+          // Supabase girişi (ikincil)
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: username + '@example.com',
+            password: password
+          });
+          
+          if (error) {
+            console.error('Supabase giriş hatası:', error);
+            alert('Giriş başarısız! Test kullanıcısı: k1 / k2');
+            return;
+          }
+          
+          currentUser = data.user;
+          showDashboard();
+          loadUserData();
           
           if (rememberMe) {
             localStorage.setItem('rememberMe', 'true');
             localStorage.setItem('username', username);
-          } else {
-            localStorage.removeItem('rememberMe');
-            localStorage.removeItem('username');
           }
           
-          showDashboard();
-          loadUserData();
-          console.log('Test kullanıcısı ile giriş başarılı:', currentUser);
-          return;
+          console.log('Supabase ile giriş başarılı:', currentUser);
+          
+        } catch (error) {
+          console.error('Login error:', error);
+          alert('Giriş sırasında hata oluştu! Test kullanıcısı: k1 / k2');
         }
-        
-        // Supabase girişi (ikincil)
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: username + '@example.com',
-          password: password
-        });
-        
-        if (error) {
-          console.error('Supabase giriş hatası:', error);
-          alert('Giriş başarısız! Test kullanıcısı: k1 / k2');
-          return;
-        }
-        
-        currentUser = data.user;
-        showDashboard();
-        loadUserData();
-        
-        if (rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-          localStorage.setItem('username', username);
-        }
-        
-        console.log('Supabase ile giriş başarılı:', currentUser);
-        
-      } catch (error) {
-        console.error('Login error:', error);
-        alert('Giriş sırasında hata oluştu! Test kullanıcısı: k1 / k2');
       }
-    }
-    
-    // Kullanıcı verilerini yükle
-    async function loadUserData() {
-      if (!currentUser) return;
       
-      try {
-        // Sınavları yükle
-        const { data: sinavlarData, error } = await supabase
-          .from('sinavlar')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('created_at', { ascending: false });
+      // Kullanıcı verilerini yükle
+      async function loadUserData() {
+        if (!currentUser) return;
         
-        if (error) {
-          console.error('Sınavlar yüklenirken hata:', error);
-          // LocalStorage'dan yükle (fallback)
-          const kayitliSinavlar = localStorage.getItem('sinavlar');
-          if (kayitliSinavlar) {
-            sinavlar = JSON.parse(kayitliSinavlar);
+        try {
+          // Sınavları yükle
+          const { data: sinavlarData, error } = await supabase
+            .from('sinavlar')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Sınavlar yüklenirken hata:', error);
+            // LocalStorage'dan yükle (fallback)
+            const kayitliSinavlar = localStorage.getItem('sinavlar');
+            if (kayitliSinavlar) {
+              sinavlar = JSON.parse(kayitliSinavlar);
+              sinavlarGuncelle();
+            }
+          } else {
+            sinavlar = sinavlarData || [];
             sinavlarGuncelle();
           }
-        } else {
-          sinavlar = sinavlarData || [];
-          sinavlarGuncelle();
+        } catch (error) {
+          console.error('Veri yükleme hatası:', error);
         }
-      } catch (error) {
-        console.error('Veri yükleme hatası:', error);
       }
-    }
-    
-    // Sınav kaydetme (Supabase ile)
-    async function sinavKaydetSupabase(yeniSinav) {
-      if (!currentUser) return;
       
-      try {
-        const { data, error } = await supabase
-          .from('sinavlar')
-          .insert([{
-            user_id: currentUser.id,
-            tur: yeniSinav.tur,
-            ad: yeniSinav.ad,
-            tarih: yeniSinav.tarih,
-            sonuc: yeniSinav.sonuc,
-            max_puan: yeniSinav.maxPuan,
-            notlar: yeniSinav.notlar
-          }])
-          .select();
+      // Sınav kaydetme (Supabase ile)
+      async function sinavKaydetSupabase(yeniSinav) {
+        if (!currentUser) return;
         
-        if (error) {
+        try {
+          const { data, error } = await supabase
+            .from('sinavlar')
+            .insert([{
+              user_id: currentUser.id,
+              tur: yeniSinav.tur,
+              ad: yeniSinav.ad,
+              tarih: yeniSinav.tarih,
+              sonuc: yeniSinav.sonuc,
+              max_puan: yeniSinav.maxPuan,
+              notlar: yeniSinav.notlar
+            }])
+            .select();
+          
+          if (error) {
+            console.error('Sınav kaydetme hatası:', error);
+            // LocalStorage'a kaydet (fallback)
+            sinavlar.push(yeniSinav);
+            localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
+          } else {
+            // Başarılı kayıt
+            sinavlar.push({ ...yeniSinav, id: data[0].id });
+            localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
+          }
+        } catch (error) {
           console.error('Sınav kaydetme hatası:', error);
           // LocalStorage'a kaydet (fallback)
           sinavlar.push(yeniSinav);
           localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
-        } else {
-          // Başarılı kayıt
-          sinavlar.push({ ...yeniSinav, id: data[0].id });
-          localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
         }
-      } catch (error) {
-        console.error('Sınav kaydetme hatası:', error);
-        // LocalStorage'a kaydet (fallback)
-        sinavlar.push(yeniSinav);
-        localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
       }
-    }
-    
-    // Sınav güncelleme (Supabase ile)
-    async function sinavGuncelleSupabase(sinavId, guncelVeri) {
-      if (!currentUser) return;
       
-      try {
-        const { error } = await supabase
-          .from('sinavlar')
-          .update({
-            ad: guncelVeri.ad,
-            tarih: guncelVeri.tarih,
-            sonuc: guncelVeri.sonuc,
-            notlar: guncelVeri.notlar,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sinavId)
-          .eq('user_id', currentUser.id);
+      // Sınav güncelleme (Supabase ile)
+      async function sinavGuncelleSupabase(sinavId, guncelVeri) {
+        if (!currentUser) return;
         
-        if (error) {
+        try {
+          const { error } = await supabase
+            .from('sinavlar')
+            .update({
+              ad: guncelVeri.ad,
+              tarih: guncelVeri.tarih,
+              sonuc: guncelVeri.sonuc,
+              notlar: guncelVeri.notlar,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sinavId)
+            .eq('user_id', currentUser.id);
+          
+          if (error) {
+            console.error('Sınav güncelleme hatası:', error);
+          }
+        } catch (error) {
           console.error('Sınav güncelleme hatası:', error);
         }
-      } catch (error) {
-        console.error('Sınav güncelleme hatası:', error);
       }
-    }
-    
-    // Sınav silme (Supabase ile)
-    async function sinavSilSupabase(sinavId) {
-      if (!currentUser) return;
       
-      try {
-        const { error } = await supabase
-          .from('sinavlar')
-          .delete()
-          .eq('id', sinavId)
-          .eq('user_id', currentUser.id);
+      // Sınav silme (Supabase ile)
+      async function sinavSilSupabase(sinavId) {
+        if (!currentUser) return;
         
-        if (error) {
+        try {
+          const { error } = await supabase
+            .from('sinavlar')
+            .delete()
+            .eq('id', sinavId)
+            .eq('user_id', currentUser.id);
+          
+          if (error) {
+            console.error('Sınav silme hatası:', error);
+          }
+        } catch (error) {
           console.error('Sınav silme hatası:', error);
         }
-      } catch (error) {
-        console.error('Sınav silme hatası:', error);
       }
-    }
-    
-    const form = document.getElementById('loginForm');
-    const errorMsg = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
-    const captchaCheckbox = document.getElementById('captcha');
-    
-    function showMessage(type, message) {
-      if (type === 'success') {
-        successMsg.textContent = message;
-        successMsg.classList.add('show');
-        errorMsg.classList.remove('show');
-        setTimeout(() => {
-          successMsg.classList.remove('show');
-        }, 3000);
-      } else {
-        errorMsg.textContent = message;
-        errorMsg.classList.add('show');
-        successMsg.classList.remove('show');
-        setTimeout(() => {
+      
+      const form = document.getElementById('loginForm');
+      const errorMsg = document.getElementById('errorMsg');
+      const successMsg = document.getElementById('successMsg');
+      const captchaCheckbox = document.getElementById('captcha');
+      
+      function showMessage(type, message) {
+        if (type === 'success') {
+          successMsg.textContent = message;
+          successMsg.classList.add('show');
           errorMsg.classList.remove('show');
-        }, 3000);
+          setTimeout(() => {
+            successMsg.classList.remove('show');
+          }, 3000);
+        } else {
+          errorMsg.textContent = message;
+          errorMsg.classList.add('show');
+          successMsg.classList.remove('show');
+          setTimeout(() => {
+            errorMsg.classList.remove('show');
+          }, 3000);
+        }
       }
-    }
-    
-    function showDashboard(name) {
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      const dashboard = document.getElementById('dashboard');
-      const studentDashboard = document.getElementById('studentDashboard');
-      const studentName = document.getElementById('studentName');
       
-      if (loginForm) loginForm.style.display = 'none';
-      if (registerForm) registerForm.style.display = 'none';
-      if (dashboard) dashboard.style.display = 'none';
-      if (studentDashboard) studentDashboard.style.display = 'block';
-      if (studentName) studentName.textContent = name || 'Öğrenci';
-    }
-    
-    // Logout fonksiyonu güvenli hale getirildi
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.onclick = function() {
-        const dashboard = document.getElementById('dashboard');
+      function showDashboard(name) {
         const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const dashboard = document.getElementById('dashboard');
+        const studentDashboard = document.getElementById('studentDashboard');
+        const studentName = document.getElementById('studentName');
         
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'none';
         if (dashboard) dashboard.style.display = 'none';
-        if (loginForm) loginForm.style.display = 'flex';
-      };
-    }
+        if (studentDashboard) studentDashboard.style.display = 'block';
+        if (studentName) studentName.textContent = name || 'Öğrenci';
+      }
+      
+      // Logout fonksiyonu güvenli hale getirildi
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.onclick = function() {
+          const dashboard = document.getElementById('dashboard');
+          const loginForm = document.getElementById('loginForm');
+          
+          if (dashboard) dashboard.style.display = 'none';
+          if (loginForm) loginForm.style.display = 'flex';
+        };
+      }
 
-    // Sayfa yüklendiğinde kaydedilmiş bilgileri kontrol et
-    window.addEventListener('load', function() {
-      const savedUsername = localStorage.getItem('savedUsername');
-      const savedPassword = localStorage.getItem('savedPassword');
-      const rememberMe = localStorage.getItem('rememberMe');
-      
-      if (rememberMe === 'true' && savedUsername && savedPassword) {
-        document.getElementById('username').value = savedUsername;
-        document.getElementById('password').value = savedPassword;
-        document.getElementById('rememberMe').checked = true;
-      }
-    });
-    
-    // Kayıt fonksiyonu
-    async function register() {
-      const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
-      const passwordConfirm = document.getElementById('regPasswordConfirm').value;
-      const robotCheck = document.getElementById('regRobotCheck').checked;
-      
-      if (!username || !password || !passwordConfirm) {
-        alert('Tüm alanları doldurun!');
-        return;
-      }
-      
-      if (password !== passwordConfirm) {
-        alert('Şifreler eşleşmiyor!');
-        return;
-      }
-      
-      if (password.length < 6) {
-        alert('Şifre en az 6 karakter olmalıdır!');
-        return;
-      }
-      
-      if (!robotCheck) {
-        alert('Robot olmadığınızı doğrulayın!');
-        return;
-      }
-      
-      try {
-        // Supabase ile kayıt
-        const { data, error } = await supabase.auth.signUp({
-          email: username + '@example.com',
-          password: password,
-          options: {
-            data: {
-              username: username
-            }
-          }
-        });
+      // Sayfa yüklendiğinde kaydedilmiş bilgileri kontrol et
+      window.addEventListener('load', function() {
+        const savedUsername = localStorage.getItem('savedUsername');
+        const savedPassword = localStorage.getItem('savedPassword');
+        const rememberMe = localStorage.getItem('rememberMe');
         
-        if (error) {
-          console.error('Kayıt hatası:', error);
-          alert('Kayıt başarısız! ' + error.message);
+        if (rememberMe === 'true' && savedUsername && savedPassword) {
+          document.getElementById('username').value = savedUsername;
+          document.getElementById('password').value = savedPassword;
+          document.getElementById('rememberMe').checked = true;
+        }
+      });
+      
+      // Kayıt fonksiyonu
+      async function register() {
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+        const robotCheck = document.getElementById('regRobotCheck').checked;
+        
+        if (!username || !password || !passwordConfirm) {
+          alert('Tüm alanları doldurun!');
           return;
         }
         
-        alert('Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
-        showLoginForm();
-        
-      } catch (error) {
-        console.error('Kayıt error:', error);
-        alert('Kayıt sırasında hata oluştu!');
-      }
-    }
-    
-    // Form gösterme fonksiyonları
-    function showRegisterForm() {
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      
-      if (loginForm) loginForm.style.display = 'none';
-      if (registerForm) registerForm.style.display = 'flex';
-    }
-    
-    function showLoginForm() {
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      
-      if (registerForm) registerForm.style.display = 'none';
-      if (loginForm) loginForm.style.display = 'flex';
-    }
-    
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const robotCheck = document.getElementById('robotCheck');
-      if (!robotCheck.checked) {
-        showMessage('error', 'Lütfen robot doğrulamasını tamamlayın!');
-        return;
-      }
-      
-      errorMsg.textContent = '';
-      successMsg.textContent = '';
-      errorMsg.classList.remove('show');
-      successMsg.classList.remove('show');
-      
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const rememberMe = document.getElementById('rememberMe').checked;
-      
-      // Beni hatırla seçeneği işleme
-      if (rememberMe) {
-        localStorage.setItem('savedUsername', username);
-        localStorage.setItem('savedPassword', password);
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('savedUsername');
-        localStorage.removeItem('savedPassword');
-        localStorage.removeItem('rememberMe');
-      }
-      
-      // Yeni login sistemi kullanılıyor - eski server kodu kaldırıldı
-      await login();
-    });
-    
-    // Eski signup form kodu kaldırıldı - yeni register sistemi kullanılıyor
-
-    document.getElementById('studentLogoutBtn').onclick = function() {
-      document.getElementById('studentDashboard').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    
-    // Sidebar butonlarına tıklama olayları
-    document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
-      btn.addEventListener('click', function() {
-        const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
-        const pageName = pages[index];
-        if (pageName) {
-          document.getElementById('studentDashboard').style.display = 'none';
-          document.getElementById(pageName).style.display = 'block';
+        if (password !== passwordConfirm) {
+          alert('Şifreler eşleşmiyor!');
+          return;
         }
+        
+        if (password.length < 6) {
+          alert('Şifre en az 6 karakter olmalıdır!');
+          return;
+        }
+        
+        if (!robotCheck) {
+          alert('Robot olmadığınızı doğrulayın!');
+          return;
+        }
+        
+        try {
+          // Supabase ile kayıt
+          const { data, error } = await supabase.auth.signUp({
+            email: username + '@example.com',
+            password: password,
+            options: {
+              data: {
+                username: username
+              }
+            }
+          });
+          
+          if (error) {
+            console.error('Kayıt hatası:', error);
+            alert('Kayıt başarısız! ' + error.message);
+            return;
+          }
+          
+          alert('Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+          showLoginForm();
+          
+        } catch (error) {
+          console.error('Kayıt error:', error);
+          alert('Kayıt sırasında hata oluştu!');
+        }
+      }
+      
+      // Form gösterme fonksiyonları
+      function showRegisterForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'flex';
+      }
+      
+      function showLoginForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (registerForm) registerForm.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'flex';
+      }
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const robotCheck = document.getElementById('robotCheck');
+        if (!robotCheck.checked) {
+          showMessage('error', 'Lütfen robot doğrulamasını tamamlayın!');
+          return;
+        }
+        
+        errorMsg.textContent = '';
+        successMsg.textContent = '';
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        
+        // Beni hatırla seçeneği işleme
+        if (rememberMe) {
+          localStorage.setItem('savedUsername', username);
+          localStorage.setItem('savedPassword', password);
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          localStorage.removeItem('savedUsername');
+          localStorage.removeItem('savedPassword');
+          localStorage.removeItem('rememberMe');
+        }
+        
+        // Yeni login sistemi kullanılıyor - eski server kodu kaldırıldı
+        await login();
       });
-    });
-    
-    // Geri butonlarına tıklama olayları
-    document.querySelectorAll('.backBtn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('[id$="Page"]').forEach(page => {
-          page.style.display = 'none';
-        });
-        document.getElementById('studentDashboard').style.display = 'block';
-      });
-    });
-    
-    // Sayfa çıkış butonları
-    document.getElementById('derslerLogoutBtn').onclick = function() {
-      document.getElementById('derslerPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('notlarLogoutBtn').onclick = function() {
-      document.getElementById('notlarPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('odevlerLogoutBtn').onclick = function() {
-      document.getElementById('odevlerPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('sinavlarLogoutBtn').onclick = function() {
-      document.getElementById('sinavlarPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('mesajlarLogoutBtn').onclick = function() {
-      document.getElementById('mesajlarPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('gözlemLogoutBtn').onclick = function() {
-      document.getElementById('gözlemPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('etutlerLogoutBtn').onclick = function() {
-      document.getElementById('etutlerPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('ajandaLogoutBtn').onclick = function() {
-      document.getElementById('ajandaPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
-    document.getElementById('devamsizlikLogoutBtn').onclick = function() {
-      document.getElementById('devamsizlikPage').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'flex';
-    };
+      
+      // Eski signup form kodu kaldırıldı - yeni register sistemi kullanılıyor
 
-    // Takvim fonksiyonları
-    let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
-    
-    function updateDateTime() {
-      const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      };
-      const timeOptions = { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        timeZone: 'Europe/Istanbul'
+      document.getElementById('studentLogoutBtn').onclick = function() {
+        document.getElementById('studentDashboard').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
       };
       
-      document.getElementById('currentDate').textContent = now.toLocaleDateString('tr-TR', options);
-      document.getElementById('currentTime').textContent = now.toLocaleTimeString('tr-TR', timeOptions);
-    }
-    
-    function generateCalendar(month, year) {
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
-      
-      const monthNames = [
-        'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-      ];
-      
-      document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
-      
-      const calendarDays = document.getElementById('calendarDays');
-      calendarDays.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 42; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
-        
-        const dayElement = document.createElement('div');
-        dayElement.style.cssText = `
-          text-align: center;
-          padding: 10px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.3s;
-          font-weight: 500;
-        `;
-        
-        const dayNumber = date.getDate();
-        dayElement.textContent = dayNumber;
-        
-        // Bugünün tarihi
-        if (date.toDateString() === today.toDateString()) {
-          dayElement.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
-          dayElement.style.color = '#333';
-          dayElement.style.fontWeight = 'bold';
-          dayElement.style.transform = 'scale(1.1)';
-        }
-        // Bu ayın günleri
-        else if (date.getMonth() === month) {
-          dayElement.style.background = '#fff';
-          dayElement.style.color = '#333';
-        }
-        // Diğer ayların günleri
-        else {
-          dayElement.style.background = '#f0f0f0';
-          dayElement.style.color = '#999';
-        }
-        
-        dayElement.addEventListener('mouseenter', function() {
-          if (date.getMonth() === month) {
-            this.style.background = '#e8f5e8';
-            this.style.transform = 'scale(1.05)';
+      // Sidebar butonlarına tıklama olayları
+      document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
+        btn.addEventListener('click', function() {
+          const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
+          const pageName = pages[index];
+          if (pageName) {
+            document.getElementById('studentDashboard').style.display = 'none';
+            document.getElementById(pageName).style.display = 'block';
           }
         });
-        
-        dayElement.addEventListener('mouseleave', function() {
-          if (date.toDateString() === today.toDateString()) {
-            this.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
-          } else if (date.getMonth() === month) {
-            this.style.background = '#fff';
-          }
-          this.style.transform = date.toDateString() === today.toDateString() ? 'scale(1.1)' : 'scale(1)';
-        });
-        
-        calendarDays.appendChild(dayElement);
-      }
-    }
-    
-    // Takvim kontrolleri
-    document.getElementById('prevMonth').addEventListener('click', function() {
-      currentMonth--;
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
-      generateCalendar(currentMonth, currentYear);
-    });
-    
-    document.getElementById('nextMonth').addEventListener('click', function() {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      generateCalendar(currentMonth, currentYear);
-    });
-    
-    // Sayfa açıldığında takvimi başlat
-    document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
-      btn.addEventListener('click', function() {
-        const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
-        const pageName = pages[index];
-        if (pageName) {
-          document.getElementById('studentDashboard').style.display = 'none';
+      });
+      
+      // Geri butonlarına tıklama olayları
+      document.querySelectorAll('.backBtn').forEach(btn => {
+        btn.addEventListener('click', function() {
           document.querySelectorAll('[id$="Page"]').forEach(page => {
             page.style.display = 'none';
           });
-          document.getElementById(pageName).style.display = 'block';
-          
-          // Ajanda sayfası açıldığında takvimi başlat
-          if (pageName === 'ajandaPage') {
-            generateCalendar(currentMonth, currentYear);
-            updateDateTime();
-            setInterval(updateDateTime, 1000); // Her saniye güncelle
-          }
-        }
+          document.getElementById('studentDashboard').style.display = 'block';
+        });
       });
-    });
-
-    // Sınav kaydetme fonksiyonu
-    let sinavlar = [];
-    let duzenlenenSinavId = null;
-    let denemeGrafik = null;
-    
-    // Sınav türü değiştiğinde placeholder ve label güncelle
-    document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
-      radio.addEventListener('change', function() {
-        const sonucInput = document.getElementById('sinavSonucu');
-        const adiInput = document.getElementById('sinavAdi');
-        const adiLabel = document.getElementById('sinavAdiLabel');
-        
-        if (this.value === 'yazili') {
-          sonucInput.placeholder = '100 üzerinden';
-          sonucInput.max = '100';
-          adiLabel.textContent = 'Sınav Adı';
-          adiInput.placeholder = 'Örn: Matematik Final';
-          // Yazılı seçildiğinde grafiği gizle
-          document.getElementById('denemeGrafikContainer').style.display = 'none';
-        } else {
-          sonucInput.placeholder = '500 üzerinden';
-          sonucInput.max = '500';
-          adiLabel.textContent = 'Yayın Evi Adı';
-          adiInput.placeholder = 'Örn: Aydın Yayınları';
-          // Deneme seçildiğinde grafiği göster
-          denemeGrafikOlustur();
-        }
-        
-        // Sınav listesini güncelle
-        sinavlarGuncelle();
-      });
-    });
-    
-    // Buton referansları
-    const kaydetBtn = document.getElementById('sinavKaydetBtn');
-    const guncelleBtn = document.getElementById('sinavGuncelleBtn');
-    const iptalBtn = document.getElementById('sinavIptalBtn');
-    
-    kaydetBtn.addEventListener('click', function() {
-      sinavKaydet();
-    });
-    
-    guncelleBtn.addEventListener('click', function() {
-      sinavGuncelle();
-    });
-    
-    iptalBtn.addEventListener('click', function() {
-      duzenlemeModunuIptalEt();
-    });
-    
-    function sinavKaydet() {
-      const sinavTuru = document.querySelector('input[name="sinavTuru"]:checked').value;
-      const sinavAdi = document.getElementById('sinavAdi').value;
-      const sinavTarihi = document.getElementById('sinavTarihi').value;
-      const sinavSonucu = document.getElementById('sinavSonucu').value;
-      const sinavNotlari = document.getElementById('sinavNotlari').value;
       
-      if (!sinavAdi || !sinavTarihi || !sinavSonucu) {
-        alert('Lütfen tüm gerekli alanları doldurun!');
-        return;
-      }
-      
-      const maxPuan = sinavTuru === 'yazili' ? 100 : 500;
-      const sonuc = parseInt(sinavSonucu);
-      
-      if (sonuc > maxPuan) {
-        alert(`${sinavTuru === 'yazili' ? 'Yazılı' : 'Deneme sınavı'} maksimum ${maxPuan} puan olabilir!`);
-        return;
-      }
-      
-      const yeniSinav = {
-        id: Date.now(),
-        tur: sinavTuru,
-        ad: sinavAdi,
-        tarih: sinavTarihi,
-        sonuc: sonuc,
-        maxPuan: maxPuan,
-        notlar: sinavNotlari,
-        kayitTarihi: new Date().toLocaleDateString('tr-TR')
+      // Sayfa çıkış butonları
+      document.getElementById('derslerLogoutBtn').onclick = function() {
+        document.getElementById('derslerPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
       };
+      document.getElementById('notlarLogoutBtn').onclick = function() {
+        document.getElementById('notlarPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('odevlerLogoutBtn').onclick = function() {
+        document.getElementById('odevlerPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('sinavlarLogoutBtn').onclick = function() {
+        document.getElementById('sinavlarPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('mesajlarLogoutBtn').onclick = function() {
+        document.getElementById('mesajlarPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('gözlemLogoutBtn').onclick = function() {
+        document.getElementById('gözlemPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('etutlerLogoutBtn').onclick = function() {
+        document.getElementById('etutlerPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('ajandaLogoutBtn').onclick = function() {
+        document.getElementById('ajandaPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+      document.getElementById('devamsizlikLogoutBtn').onclick = function() {
+        document.getElementById('devamsizlikPage').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'flex';
+      };
+
+      // Takvim fonksiyonları
+      let currentDate = new Date();
+      let currentMonth = currentDate.getMonth();
+      let currentYear = currentDate.getFullYear();
       
-      sinavlar.push(yeniSinav);
-      sinavlarGuncelle();
-      sinavlarKaydet(); // localStorage'a kaydet
-      sinavKaydetSupabase(yeniSinav); // Supabase'e kaydet
-      sinavFormuTemizle();
-      
-      // Eğer deneme sınavı eklendiyse grafiği güncelle
-      if (sinavTuru === 'deneme') {
-        denemeGrafikOlustur();
+      function updateDateTime() {
+        const now = new Date();
+        const options = { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        };
+        const timeOptions = { 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit',
+          timeZone: 'Europe/Istanbul'
+        };
+        
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('tr-TR', options);
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('tr-TR', timeOptions);
       }
       
-      // Başarı mesajı
-      const basariMesaji = document.createElement('div');
-      basariMesaji.textContent = 'Sınav başarıyla kaydedildi!';
-      basariMesaji.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-      `;
-      document.body.appendChild(basariMesaji);
-      
-      setTimeout(() => {
-        basariMesaji.remove();
-      }, 3000);
-    }
-    
-    function sinavGuncelle() {
-      if (!duzenlenenSinavId) return;
-      
-      const sinavTuru = document.querySelector('input[name="sinavTuru"]:checked').value;
-      const sinavAdi = document.getElementById('sinavAdi').value;
-      const sinavTarihi = document.getElementById('sinavTarihi').value;
-      const sinavSonucu = document.getElementById('sinavSonucu').value;
-      const sinavNotlari = document.getElementById('sinavNotlari').value;
-      
-      if (!sinavAdi || !sinavTarihi || !sinavSonucu) {
-        alert('Lütfen tüm gerekli alanları doldurun!');
-        return;
+      function generateCalendar(month, year) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+        
+        const monthNames = [
+          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ];
+        
+        document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
+        
+        const calendarDays = document.getElementById('calendarDays');
+        calendarDays.innerHTML = '';
+        
+        const today = new Date();
+        
+        for (let i = 0; i < 42; i++) {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + i);
+          
+          const dayElement = document.createElement('div');
+          dayElement.style.cssText = `
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+          `;
+          
+          const dayNumber = date.getDate();
+          dayElement.textContent = dayNumber;
+          
+          // Bugünün tarihi
+          if (date.toDateString() === today.toDateString()) {
+            dayElement.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
+            dayElement.style.color = '#333';
+            dayElement.style.fontWeight = 'bold';
+            dayElement.style.transform = 'scale(1.1)';
+          }
+          // Bu ayın günleri
+          else if (date.getMonth() === month) {
+            dayElement.style.background = '#fff';
+            dayElement.style.color = '#333';
+          }
+          // Diğer ayların günleri
+          else {
+            dayElement.style.background = '#f0f0f0';
+            dayElement.style.color = '#999';
+          }
+          
+          dayElement.addEventListener('mouseenter', function() {
+            if (date.getMonth() === month) {
+              this.style.background = '#e8f5e8';
+              this.style.transform = 'scale(1.05)';
+            }
+          });
+          
+          dayElement.addEventListener('mouseleave', function() {
+            if (date.toDateString() === today.toDateString()) {
+              this.style.background = 'linear-gradient(45deg, #32cd32, #ffff00)';
+            } else if (date.getMonth() === month) {
+              this.style.background = '#fff';
+            }
+            this.style.transform = date.toDateString() === today.toDateString() ? 'scale(1.1)' : 'scale(1)';
+          });
+          
+          calendarDays.appendChild(dayElement);
+        }
       }
       
-      const maxPuan = sinavTuru === 'yazili' ? 100 : 500;
-      const sonuc = parseInt(sinavSonucu);
+      // Takvim kontrolleri
+      document.getElementById('prevMonth').addEventListener('click', function() {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        generateCalendar(currentMonth, currentYear);
+      });
       
-      if (sonuc > maxPuan) {
-        alert(`${sinavTuru === 'yazili' ? 'Yazılı' : 'Deneme sınavı'} maksimum ${maxPuan} puan olabilir!`);
-        return;
-      }
+      document.getElementById('nextMonth').addEventListener('click', function() {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        generateCalendar(currentMonth, currentYear);
+      });
       
-      // Sınavı güncelle - mevcut verileri koru
-      const sinavIndex = sinavlar.findIndex(s => s.id === duzenlenenSinavId);
-      if (sinavIndex !== -1) {
-        const mevcutSinav = sinavlar[sinavIndex];
-        sinavlar[sinavIndex] = {
-          ...mevcutSinav, // Mevcut tüm verileri koru
+      // Sayfa açıldığında takvimi başlat
+      document.querySelectorAll('.sidebar-btn').forEach((btn, index) => {
+        btn.addEventListener('click', function() {
+          const pages = ['derslerPage', 'notlarPage', 'odevlerPage', 'sinavlarPage', 'gözlemPage', 'mesajlarPage', 'etutlerPage', 'ajandaPage', 'devamsizlikPage'];
+          const pageName = pages[index];
+          if (pageName) {
+            document.getElementById('studentDashboard').style.display = 'none';
+            document.querySelectorAll('[id$="Page"]').forEach(page => {
+              page.style.display = 'none';
+            });
+            document.getElementById(pageName).style.display = 'block';
+            
+            // Ajanda sayfası açıldığında takvimi başlat
+            if (pageName === 'ajandaPage') {
+              generateCalendar(currentMonth, currentYear);
+              updateDateTime();
+              setInterval(updateDateTime, 1000); // Her saniye güncelle
+            }
+          }
+        });
+      });
+
+      // Sınav kaydetme fonksiyonu
+      let sinavlar = [];
+      let duzenlenenSinavId = null;
+      let denemeGrafik = null;
+      
+      // Sınav türü değiştiğinde placeholder ve label güncelle
+      document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const sonucInput = document.getElementById('sinavSonucu');
+          const adiInput = document.getElementById('sinavAdi');
+          const adiLabel = document.getElementById('sinavAdiLabel');
+          
+          if (this.value === 'yazili') {
+            sonucInput.placeholder = '100 üzerinden';
+            sonucInput.max = '100';
+            adiLabel.textContent = 'Sınav Adı';
+            adiInput.placeholder = 'Örn: Matematik Final';
+            // Yazılı seçildiğinde grafiği gizle
+            document.getElementById('denemeGrafikContainer').style.display = 'none';
+          } else {
+            sonucInput.placeholder = '500 üzerinden';
+            sonucInput.max = '500';
+            adiLabel.textContent = 'Yayın Evi Adı';
+            adiInput.placeholder = 'Örn: Aydın Yayınları';
+            // Deneme seçildiğinde grafiği göster
+            denemeGrafikOlustur();
+          }
+          
+          // Sınav listesini güncelle
+          sinavlarGuncelle();
+        });
+      });
+      
+      // Buton referansları
+      const kaydetBtn = document.getElementById('sinavKaydetBtn');
+      const guncelleBtn = document.getElementById('sinavGuncelleBtn');
+      const iptalBtn = document.getElementById('sinavIptalBtn');
+      
+      kaydetBtn.addEventListener('click', function() {
+        sinavKaydet();
+      });
+      
+      guncelleBtn.addEventListener('click', function() {
+        sinavGuncelle();
+      });
+      
+      iptalBtn.addEventListener('click', function() {
+        duzenlemeModunuIptalEt();
+      });
+      
+      function sinavKaydet() {
+        const sinavTuru = document.querySelector('input[name="sinavTuru"]:checked').value;
+        const sinavAdi = document.getElementById('sinavAdi').value;
+        const sinavTarihi = document.getElementById('sinavTarihi').value;
+        const sinavSonucu = document.getElementById('sinavSonucu').value;
+        const sinavNotlari = document.getElementById('sinavNotlari').value;
+        
+        if (!sinavAdi || !sinavTarihi || !sinavSonucu) {
+          alert('Lütfen tüm gerekli alanları doldurun!');
+          return;
+        }
+        
+        const maxPuan = sinavTuru === 'yazili' ? 100 : 500;
+        const sonuc = parseInt(sinavSonucu);
+        
+        if (sonuc > maxPuan) {
+          alert(`${sinavTuru === 'yazili' ? 'Yazılı' : 'Deneme sınavı'} maksimum ${maxPuan} puan olabilir!`);
+          return;
+        }
+        
+        const yeniSinav = {
+          id: Date.now(),
+          tur: sinavTuru,
           ad: sinavAdi,
           tarih: sinavTarihi,
           sonuc: sonuc,
+          maxPuan: maxPuan,
           notlar: sinavNotlari,
-          guncellemeTarihi: new Date().toLocaleDateString('tr-TR')
+          kayitTarihi: new Date().toLocaleDateString('tr-TR')
         };
-      }
-      
-      sinavlarGuncelle();
-      sinavlarKaydet(); // localStorage'a kaydet
-      sinavGuncelleSupabase(duzenlenenSinavId, {
-        ad: sinavAdi,
-        tarih: sinavTarihi,
-        sonuc: sonuc,
-        notlar: sinavNotlari
-      }); // Supabase'e güncelle
-      duzenlemeModunuIptalEt();
-      
-      // Eğer deneme sınavı güncellendiyse grafiği güncelle
-      if (sinavTuru === 'deneme') {
-        denemeGrafikOlustur();
-      }
-      
-      // Başarı mesajı
-      const basariMesaji = document.createElement('div');
-      basariMesaji.textContent = 'Sınav başarıyla güncellendi!';
-      basariMesaji.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #FF9800;
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-      `;
-      document.body.appendChild(basariMesaji);
-      
-      setTimeout(() => {
-        basariMesaji.remove();
-      }, 3000);
-    }
-    
-    function duzenlemeModunuIptalEt() {
-      duzenlenenSinavId = null;
-      sinavFormuTemizle();
-      kaydetBtn.style.display = 'inline-block';
-      guncelleBtn.style.display = 'none';
-      iptalBtn.style.display = 'none';
-      
-      // Radio button'ları tekrar aktif et
-      document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
-        radio.disabled = false;
-      });
-    }
-    
-    function sinavDuzenle(sinavId) {
-      const sinav = sinavlar.find(s => s.id === sinavId);
-      if (!sinav) return;
-      
-      duzenlenenSinavId = sinavId;
-      
-      // Form alanlarını doldur
-      document.querySelector(`input[name="sinavTuru"][value="${sinav.tur}"]`).checked = true;
-      document.getElementById('sinavAdi').value = sinav.ad;
-      document.getElementById('sinavTarihi').value = sinav.tarih;
-      document.getElementById('sinavSonucu').value = sinav.sonuc;
-      document.getElementById('sinavNotlari').value = sinav.notlar || '';
-      
-      // Label'ı güncelle
-      const adiLabel = document.getElementById('sinavAdiLabel');
-      if (sinav.tur === 'yazili') {
-        adiLabel.textContent = 'Sınav Adı';
-      } else {
-        adiLabel.textContent = 'Yayın Evi Adı';
-      }
-      
-      // Placeholder'ları güncelle
-      const sonucInput = document.getElementById('sinavSonucu');
-      if (sinav.tur === 'yazili') {
-        sonucInput.placeholder = '100 üzerinden';
-        sonucInput.max = '100';
-      } else {
-        sonucInput.placeholder = '500 üzerinden';
-        sonucInput.max = '500';
-      }
-      
-      // Butonları değiştir
-      kaydetBtn.style.display = 'none';
-      guncelleBtn.style.display = 'inline-block';
-      iptalBtn.style.display = 'inline-block';
-      
-      // Radio button'ları devre dışı bırak (sınav türü değiştirilemesin)
-      document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
-        radio.disabled = true;
-      });
-      
-      // Forma scroll yap
-      document.querySelector('.sinavlar-container').scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    function sinavlarGuncelle() {
-      const container = document.getElementById('sinavlarContainer');
-      const seciliTur = document.querySelector('input[name="sinavTuru"]:checked').value;
-      
-      // Seçili türe göre sınavları filtrele
-      const filtrelenmisSinavlar = sinavlar.filter(s => s.tur === seciliTur);
-      
-      if (filtrelenmisSinavlar.length === 0) {
-        const turAdi = seciliTur === 'yazili' ? 'yazılı' : 'deneme sınavı';
-        container.innerHTML = `
-          <div style="text-align:center; padding:60px 20px; color:#666;">
-            <div style="font-size:48px; margin-bottom:20px;">${seciliTur === 'yazili' ? '📝' : '📊'}</div>
-            <h3 style="color:#4a90e2; margin-bottom:10px;">Henüz ${turAdi} eklenmemiş</h3>
-            <p style="font-style:italic; color:#999;">İlk ${turAdi}ınızı eklemek için yukarıdaki formu kullanın</p>
-          </div>
-        `;
-        return;
-      }
-      
-      // Sınavları tarihe göre sırala (en yeni önce)
-      filtrelenmisSinavlar.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-      
-      let html = '';
-      filtrelenmisSinavlar.forEach(sinav => {
-        const yuzde = (sinav.sonuc / sinav.maxPuan) * 100;
-        const sonucRengi = yuzde >= 85 ? '#4CAF50' : yuzde >= 70 ? '#FF9800' : '#F44336';
-        const sonucDurumu = yuzde >= 85 ? 'Mükemmel' : yuzde >= 70 ? 'İyi' : 'Geliştirilmeli';
-        const turIkonu = sinav.tur === 'yazili' ? '📝' : '📊';
-        const turAdi = sinav.tur === 'yazili' ? 'Yazılı' : 'Deneme';
         
-        html += `
-          <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-left:4px solid ${sonucRengi};">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:20px;">${turIkonu}</span>
-                <h4 style="color:#333; margin:0; font-size:18px;">${sinav.ad}</h4>
-                <span style="background:#4a90e2; color:#fff; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:600;">${turAdi}</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span style="background:${sonucRengi}; color:#fff; padding:4px 12px; border-radius:20px; font-size:14px; font-weight:600;">${sinav.sonuc}/${sinav.maxPuan}</span>
-                <span style="color:${sonucRengi}; font-weight:600; font-size:14px;">${sonucDurumu}</span>
-              </div>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <span style="color:#666; font-size:14px;">📅 ${new Date(sinav.tarih).toLocaleDateString('tr-TR')}</span>
-              <span style="color:#999; font-size:12px;">
-                ${sinav.guncellemeTarihi ? `Güncelleme: ${sinav.guncellemeTarihi}` : `Kayıt: ${sinav.kayitTarihi}`}
-              </span>
-            </div>
-            ${sinav.notlar ? `<p style="color:#555; font-size:14px; margin:0; font-style:italic;">"${sinav.notlar}"</p>` : ''}
-            <div style="display:flex; gap:8px; margin-top:10px;">
-              <button onclick="sinavDuzenle(${sinav.id})" style="background:#4a90e2; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">Düzenle</button>
-              <button onclick="sinavSil(${sinav.id})" style="background:#ff4444; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">Sil</button>
-            </div>
-          </div>
-        `;
-      });
-      
-      container.innerHTML = html;
-    }
-    
-    function sinavFormuTemizle() {
-      document.getElementById('sinavAdi').value = '';
-      document.getElementById('sinavTarihi').value = '';
-      document.getElementById('sinavSonucu').value = '';
-      document.getElementById('sinavNotlari').value = '';
-    }
-    
-    window.sinavSil = function(id) {
-      if (confirm('Bu sınavı silmek istediğinizden emin misiniz?')) {
-        // Silinecek sınavın türünü kontrol et
-        const silinecekSinav = sinavlar.find(s => s.id === id);
-        const sinavTuru = silinecekSinav ? silinecekSinav.tur : null;
-        
-        sinavlar = sinavlar.filter(s => s.id !== id);
+        sinavlar.push(yeniSinav);
         sinavlarGuncelle();
         sinavlarKaydet(); // localStorage'a kaydet
-        sinavSilSupabase(id); // Supabase'den sil
+        sinavKaydetSupabase(yeniSinav); // Supabase'e kaydet
+        sinavFormuTemizle();
         
-        // Eğer deneme sınavı silindiyse grafiği güncelle
+        // Eğer deneme sınavı eklendiyse grafiği güncelle
         if (sinavTuru === 'deneme') {
           denemeGrafikOlustur();
         }
         
         // Başarı mesajı
         const basariMesaji = document.createElement('div');
-        basariMesaji.textContent = 'Sınav başarıyla silindi!';
+        basariMesaji.textContent = 'Sınav başarıyla kaydedildi!';
         basariMesaji.style.cssText = `
           position: fixed;
           top: 20px;
           right: 20px;
-          background: #F44336;
+          background: #4CAF50;
           color: white;
           padding: 15px 25px;
           border-radius: 8px;
@@ -1453,355 +1219,592 @@
           basariMesaji.remove();
         }, 3000);
       }
-    };
-    
-    // Input alanlarına focus efektleri
-    document.querySelectorAll('#sinavlarPage input, #sinavlarPage textarea').forEach(input => {
-      input.addEventListener('focus', function() {
-        this.style.borderColor = '#4a90e2';
-      });
       
-      input.addEventListener('blur', function() {
-        this.style.borderColor = '#e0e0e0';
-      });
-    });
-    
-    // Sayfa yüklendiğinde localStorage'dan sınavları yükle
-    function sinavlarYukle() {
-      const kayitliSinavlar = localStorage.getItem('sinavlar');
-      if (kayitliSinavlar) {
-        sinavlar = JSON.parse(kayitliSinavlar);
-        sinavlarGuncelle();
-      }
-    }
-    
-    // Sınavları localStorage'a kaydet
-    function sinavlarKaydet() {
-      localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
-    }
-    
-    // Deneme grafiğini oluştur
-    function denemeGrafikOlustur() {
-      const denemeSinavlar = sinavlar.filter(s => s.tur === 'deneme');
-      
-      if (denemeSinavlar.length === 0) {
-        document.getElementById('denemeGrafikContainer').style.display = 'none';
-        return;
-      }
-      
-      // Tarihe göre sırala
-      denemeSinavlar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-      
-      const ctx = document.getElementById('denemeGrafik').getContext('2d');
-      
-      // Eğer önceki grafik varsa yok et
-      if (denemeGrafik) {
-        denemeGrafik.destroy();
-      }
-      
-      denemeGrafik = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: denemeSinavlar.map(s => new Date(s.tarih).toLocaleDateString('tr-TR')),
-          datasets: [{
-            label: 'Deneme Sınavı Puanları',
-            data: denemeSinavlar.map(s => s.sonuc),
-            borderColor: '#4a90e2',
-            backgroundColor: 'rgba(74, 144, 226, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4,
-            pointBackgroundColor: '#4a90e2',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: 'rgba(0,0,0,0.8)',
-              titleColor: '#fff',
-              bodyColor: '#fff',
-              borderColor: '#4a90e2',
-              borderWidth: 1,
-              callbacks: {
-                title: function(context) {
-                  return '📅 ' + context[0].label;
-                },
-                label: function(context) {
-                  return '📊 Puan: ' + context.parsed.y + '/500';
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 500,
-              grid: {
-                color: 'rgba(0,0,0,0.1)'
-              },
-              ticks: {
-                color: '#666',
-                callback: function(value) {
-                  return value + ' puan';
-                }
-              }
-            },
-            x: {
-              grid: {
-                color: 'rgba(0,0,0,0.1)'
-              },
-              ticks: {
-                color: '#666',
-                maxRotation: 45
-              }
-            }
-          },
-          interaction: {
-            intersect: false,
-            mode: 'index'
-          }
+      function sinavGuncelle() {
+        if (!duzenlenenSinavId) return;
+        
+        const sinavTuru = document.querySelector('input[name="sinavTuru"]:checked').value;
+        const sinavAdi = document.getElementById('sinavAdi').value;
+        const sinavTarihi = document.getElementById('sinavTarihi').value;
+        const sinavSonucu = document.getElementById('sinavSonucu').value;
+        const sinavNotlari = document.getElementById('sinavNotlari').value;
+        
+        if (!sinavAdi || !sinavTarihi || !sinavSonucu) {
+          alert('Lütfen tüm gerekli alanları doldurun!');
+          return;
         }
-      });
+        
+        const maxPuan = sinavTuru === 'yazili' ? 100 : 500;
+        const sonuc = parseInt(sinavSonucu);
+        
+        if (sonuc > maxPuan) {
+          alert(`${sinavTuru === 'yazili' ? 'Yazılı' : 'Deneme sınavı'} maksimum ${maxPuan} puan olabilir!`);
+          return;
+        }
+        
+        // Sınavı güncelle - mevcut verileri koru
+        const sinavIndex = sinavlar.findIndex(s => s.id === duzenlenenSinavId);
+        if (sinavIndex !== -1) {
+          const mevcutSinav = sinavlar[sinavIndex];
+          sinavlar[sinavIndex] = {
+            ...mevcutSinav, // Mevcut tüm verileri koru
+            ad: sinavAdi,
+            tarih: sinavTarihi,
+            sonuc: sonuc,
+            notlar: sinavNotlari,
+            guncellemeTarihi: new Date().toLocaleDateString('tr-TR')
+          };
+        }
+        
+        sinavlarGuncelle();
+        sinavlarKaydet(); // localStorage'a kaydet
+        sinavGuncelleSupabase(duzenlenenSinavId, {
+          ad: sinavAdi,
+          tarih: sinavTarihi,
+          sonuc: sonuc,
+          notlar: sinavNotlari
+        }); // Supabase'e güncelle
+        duzenlemeModunuIptalEt();
+        
+        // Eğer deneme sınavı güncellendiyse grafiği güncelle
+        if (sinavTuru === 'deneme') {
+          denemeGrafikOlustur();
+        }
+        
+        // Başarı mesajı
+        const basariMesaji = document.createElement('div');
+        basariMesaji.textContent = 'Sınav başarıyla güncellendi!';
+        basariMesaji.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #FF9800;
+          color: white;
+          padding: 15px 25px;
+          border-radius: 8px;
+          z-index: 10000;
+          animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(basariMesaji);
+        
+        setTimeout(() => {
+          basariMesaji.remove();
+        }, 3000);
+      }
       
-      document.getElementById('denemeGrafikContainer').style.display = 'block';
-    }
-    
-    // Sayfa yüklendiğinde sınavları yükle
-    document.addEventListener('DOMContentLoaded', function() {
-      sinavlarYukle();
-    });
-    
-    // Modal fonksiyonları
-    function acModal(tur) {
-      const modalOverlay = document.getElementById('modalOverlay');
-      const modalTitle = document.getElementById('modalTitle');
-      const modalBody = document.getElementById('modalBody');
+      function duzenlemeModunuIptalEt() {
+        duzenlenenSinavId = null;
+        sinavFormuTemizle();
+        kaydetBtn.style.display = 'inline-block';
+        guncelleBtn.style.display = 'none';
+        iptalBtn.style.display = 'none';
+        
+        // Radio button'ları tekrar aktif et
+        document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
+          radio.disabled = false;
+        });
+      }
       
-      // Modal içeriğini ayarla
-      const modalIcerikleri = {
-        konular: {
-          title: '📊 Konular',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">📊</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Konular Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Ders konularınızı ve ilerleme durumunuzu burada takip edebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>📈 İlerleme grafikleri</li>
-                  <li>📚 Konu listeleri</li>
-                  <li>🎯 Hedef belirleme</li>
-                  <li>📊 Performans analizi</li>
-                </ul>
-              </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+      function sinavDuzenle(sinavId) {
+        const sinav = sinavlar.find(s => s.id === sinavId);
+        if (!sinav) return;
+        
+        duzenlenenSinavId = sinavId;
+        
+        // Form alanlarını doldur
+        document.querySelector(`input[name="sinavTuru"][value="${sinav.tur}"]`).checked = true;
+        document.getElementById('sinavAdi').value = sinav.ad;
+        document.getElementById('sinavTarihi').value = sinav.tarih;
+        document.getElementById('sinavSonucu').value = sinav.sonuc;
+        document.getElementById('sinavNotlari').value = sinav.notlar || '';
+        
+        // Label'ı güncelle
+        const adiLabel = document.getElementById('sinavAdiLabel');
+        if (sinav.tur === 'yazili') {
+          adiLabel.textContent = 'Sınav Adı';
+        } else {
+          adiLabel.textContent = 'Yayın Evi Adı';
+        }
+        
+        // Placeholder'ları güncelle
+        const sonucInput = document.getElementById('sinavSonucu');
+        if (sinav.tur === 'yazili') {
+          sonucInput.placeholder = '100 üzerinden';
+          sonucInput.max = '100';
+        } else {
+          sonucInput.placeholder = '500 üzerinden';
+          sonucInput.max = '500';
+        }
+        
+        // Butonları değiştir
+        kaydetBtn.style.display = 'none';
+        guncelleBtn.style.display = 'inline-block';
+        iptalBtn.style.display = 'inline-block';
+        
+        // Radio button'ları devre dışı bırak (sınav türü değiştirilemesin)
+        document.querySelectorAll('input[name="sinavTuru"]').forEach(radio => {
+          radio.disabled = true;
+        });
+        
+        // Forma scroll yap
+        document.querySelector('.sinavlar-container').scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      function sinavlarGuncelle() {
+        const container = document.getElementById('sinavlarContainer');
+        const seciliTur = document.querySelector('input[name="sinavTuru"]:checked').value;
+        
+        // Seçili türe göre sınavları filtrele
+        const filtrelenmisSinavlar = sinavlar.filter(s => s.tur === seciliTur);
+        
+        if (filtrelenmisSinavlar.length === 0) {
+          const turAdi = seciliTur === 'yazili' ? 'yazılı' : 'deneme sınavı';
+          container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#666;">
+              <div style="font-size:48px; margin-bottom:20px;">${seciliTur === 'yazili' ? '📝' : '📊'}</div>
+              <h3 style="color:#4a90e2; margin-bottom:10px;">Henüz ${turAdi} eklenmemiş</h3>
+              <p style="font-style:italic; color:#999;">İlk ${turAdi}ınızı eklemek için yukarıdaki formu kullanın</p>
             </div>
-          `
-        },
-        basari: {
-          title: '🏆 Başarılarım',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">🏆</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Başarılarım Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Kazandığınız başarıları ve ödüllerinizi burada görebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>🏅 Başarı rozetleri</li>
-                  <li>📈 İstatistikler</li>
-                  <li>🎖️ Sertifikalar</li>
-                  <li>📊 Başarı geçmişi</li>
-                </ul>
+          `;
+          return;
+        }
+        
+        // Sınavları tarihe göre sırala (en yeni önce)
+        filtrelenmisSinavlar.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+        
+        let html = '';
+        filtrelenmisSinavlar.forEach(sinav => {
+          const yuzde = (sinav.sonuc / sinav.maxPuan) * 100;
+          const sonucRengi = yuzde >= 85 ? '#4CAF50' : yuzde >= 70 ? '#FF9800' : '#F44336';
+          const sonucDurumu = yuzde >= 85 ? 'Mükemmel' : yuzde >= 70 ? 'İyi' : 'Geliştirilmeli';
+          const turIkonu = sinav.tur === 'yazili' ? '📝' : '📊';
+          const turAdi = sinav.tur === 'yazili' ? 'Yazılı' : 'Deneme';
+          
+          html += `
+            <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-left:4px solid ${sonucRengi};">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:20px;">${turIkonu}</span>
+                  <h4 style="color:#333; margin:0; font-size:18px;">${sinav.ad}</h4>
+                  <span style="background:#4a90e2; color:#fff; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:600;">${turAdi}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="background:${sonucRengi}; color:#fff; padding:4px 12px; border-radius:20px; font-size:14px; font-weight:600;">${sinav.sonuc}/${sinav.maxPuan}</span>
+                  <span style="color:${sonucRengi}; font-weight:600; font-size:14px;">${sonucDurumu}</span>
+                </div>
               </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
-        },
-        kutuphane: {
-          title: '📚 Kütüphane',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">📚</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Kütüphane Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Dijital kütüphanenizdeki kaynaklara buradan erişebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>📖 E-kitaplar</li>
-                  <li>📄 Dökümanlar</li>
-                  <li>🔍 Arama sistemi</li>
-                  <li>📱 Mobil erişim</li>
-                </ul>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="color:#666; font-size:14px;">�� ${new Date(sinav.tarih).toLocaleDateString('tr-TR')}</span>
+                <span style="color:#999; font-size:12px;">
+                  ${sinav.guncellemeTarihi ? `Güncelleme: ${sinav.guncellemeTarihi}` : `Kayıt: ${sinav.kayitTarihi}`}
+                </span>
               </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
-        },
-        kulubler: {
-          title: '🏀 Kulüpler',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">🏀</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Kulüpler Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Okul kulüplerinizi ve etkinliklerinizi burada takip edebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>🏀 Spor kulüpleri</li>
-                  <li>🎨 Sanat kulüpleri</li>
-                  <li>🔬 Bilim kulüpleri</li>
-                  <li>📅 Etkinlik takvimi</li>
-                </ul>
+              ${sinav.notlar ? `<p style="color:#555; font-size:14px; margin:0; font-style:italic;">"${sinav.notlar}"</p>` : ''}
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <button onclick="sinavDuzenle(${sinav.id})" style="background:#4a90e2; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">Düzenle</button>
+                <button onclick="sinavSil(${sinav.id})" style="background:#ff4444; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">Sil</button>
               </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
             </div>
-          `
-        },
-        saglik: {
-          title: '❤️ Sağlık',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">❤️</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Sağlık Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Sağlık bilgilerinizi ve kontrollerinizi burada takip edebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>🏥 Sağlık kontrolleri</li>
-                  <li>💊 İlaç takibi</li>
-                  <li>📊 Sağlık istatistikleri</li>
-                  <li>🔔 Hatırlatmalar</li>
-                </ul>
-              </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
-        },
-        servis: {
-          title: '🚌 Öğrenci Servisi',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">🚌</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Öğrenci Servisi Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Servis bilgilerinizi ve güzergahları burada takip edebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>🚌 Servis güzergahları</li>
-                  <li>⏰ Hareket saatleri</li>
-                  <li>📍 Durak bilgileri</li>
-                  <li>📱 Canlı takip</li>
-                </ul>
-              </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
-        },
-        'online-sinav': {
-          title: '💻 Online Sınavlar',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">💻</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Online Sınavlar Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Online sınavlarınızı buradan takip edebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>📝 Online sınavlar</li>
-                  <li>⏱️ Zamanlı sınavlar</li>
-                  <li>📊 Sonuç analizi</li>
-                  <li>📱 Mobil uyumlu</li>
-                </ul>
-              </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
-        },
-        'online-hizmet': {
-          title: '🖱️ Online Hizmetler',
-          content: `
-            <div style="text-align:center; padding:40px 20px;">
-              <div style="font-size:64px; margin-bottom:20px;">🖱️</div>
-              <h3 style="color:#4a90e2; margin-bottom:15px;">Online Hizmetler Sayfası</h3>
-              <p style="color:#666; margin-bottom:25px;">Tüm online hizmetlere buradan erişebilirsiniz.</p>
-              <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
-                <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
-                <ul style="text-align:left; color:#666; line-height:1.8;">
-                  <li>🌐 Web hizmetleri</li>
-                  <li>📱 Mobil uygulamalar</li>
-                  <li>💳 Online ödemeler</li>
-                  <li>📞 Destek hizmetleri</li>
-                </ul>
-              </div>
-              <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
-            </div>
-          `
+          `;
+        });
+        
+        container.innerHTML = html;
+      }
+      
+      function sinavFormuTemizle() {
+        document.getElementById('sinavAdi').value = '';
+        document.getElementById('sinavTarihi').value = '';
+        document.getElementById('sinavSonucu').value = '';
+        document.getElementById('sinavNotlari').value = '';
+      }
+      
+      window.sinavSil = function(id) {
+        if (confirm('Bu sınavı silmek istediğinizden emin misiniz?')) {
+          // Silinecek sınavın türünü kontrol et
+          const silinecekSinav = sinavlar.find(s => s.id === id);
+          const sinavTuru = silinecekSinav ? silinecekSinav.tur : null;
+          
+          sinavlar = sinavlar.filter(s => s.id !== id);
+          sinavlarGuncelle();
+          sinavlarKaydet(); // localStorage'a kaydet
+          sinavSilSupabase(id); // Supabase'den sil
+          
+          // Eğer deneme sınavı silindiyse grafiği güncelle
+          if (sinavTuru === 'deneme') {
+            denemeGrafikOlustur();
+          }
+          
+          // Başarı mesajı
+          const basariMesaji = document.createElement('div');
+          basariMesaji.textContent = 'Sınav başarıyla silindi!';
+          basariMesaji.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #F44336;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+          `;
+          document.body.appendChild(basariMesaji);
+          
+          setTimeout(() => {
+            basariMesaji.remove();
+          }, 3000);
         }
       };
       
-      modalTitle.innerHTML = modalIcerikleri[tur].title;
-      modalBody.innerHTML = modalIcerikleri[tur].content;
-      
-      // Modal'ı göster
-      modalOverlay.style.display = 'block';
-      setTimeout(() => {
-        modalOverlay.classList.add('show');
-      }, 10);
-    }
-    
-    function kapatModal() {
-      const modalOverlay = document.getElementById('modalOverlay');
-      modalOverlay.classList.remove('show');
-      setTimeout(() => {
-        modalOverlay.style.display = 'none';
-      }, 300);
-    }
-    
-    // Modal dışına tıklandığında kapat
-    document.getElementById('modalOverlay').addEventListener('click', function(e) {
-      if (e.target === this) {
-        kapatModal();
-      }
-    });
-    
-    // ESC tuşu ile modal kapatma
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        kapatModal();
-      }
-    });
-
-    // Sayfa gösterme fonksiyonu
-    function sayfaGoster(sayfaAdi) {
-      // Tüm sayfaları gizle
-      const sayfalar = document.querySelectorAll('.sayfa');
-      sayfalar.forEach(sayfa => {
-        sayfa.style.display = 'none';
+      // Input alanlarına focus efektleri
+      document.querySelectorAll('#sinavlarPage input, #sinavlarPage textarea').forEach(input => {
+        input.addEventListener('focus', function() {
+          this.style.borderColor = '#4a90e2';
+        });
+        
+        input.addEventListener('blur', function() {
+          this.style.borderColor = '#e0e0e0';
+        });
       });
       
-      // Dashboard'u gizle
-      const dashboard = document.getElementById('dashboard');
-      if (dashboard) {
-        dashboard.style.display = 'none';
+      // Sayfa yüklendiğinde localStorage'dan sınavları yükle
+      function sinavlarYukle() {
+        const kayitliSinavlar = localStorage.getItem('sinavlar');
+        if (kayitliSinavlar) {
+          sinavlar = JSON.parse(kayitliSinavlar);
+          sinavlarGuncelle();
+        }
       }
       
-      // İstenen sayfayı göster
-      const hedefSayfa = document.getElementById(sayfaAdi);
-      if (hedefSayfa) {
-        hedefSayfa.style.display = 'block';
+      // Sınavları localStorage'a kaydet
+      function sinavlarKaydet() {
+        localStorage.setItem('sinavlar', JSON.stringify(sinavlar));
       }
-    }
+      
+      // Deneme grafiğini oluştur
+      function denemeGrafikOlustur() {
+        const denemeSinavlar = sinavlar.filter(s => s.tur === 'deneme');
+        
+        if (denemeSinavlar.length === 0) {
+          document.getElementById('denemeGrafikContainer').style.display = 'none';
+          return;
+        }
+        
+        // Tarihe göre sırala
+        denemeSinavlar.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+        
+        const ctx = document.getElementById('denemeGrafik').getContext('2d');
+        
+        // Eğer önceki grafik varsa yok et
+        if (denemeGrafik) {
+          denemeGrafik.destroy();
+        }
+        
+        denemeGrafik = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: denemeSinavlar.map(s => new Date(s.tarih).toLocaleDateString('tr-TR')),
+            datasets: [{
+              label: 'Deneme Sınavı Puanları',
+              data: denemeSinavlar.map(s => s.sonuc),
+              borderColor: '#4a90e2',
+              backgroundColor: 'rgba(74, 144, 226, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: '#4a90e2',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#4a90e2',
+                borderWidth: 1,
+                callbacks: {
+                  title: function(context) {
+                    return '📅 ' + context[0].label;
+                  },
+                  label: function(context) {
+                    return '📊 Puan: ' + context.parsed.y + '/500';
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 500,
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
+                },
+                ticks: {
+                  color: '#666',
+                  callback: function(value) {
+                    return value + ' puan';
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
+                },
+                ticks: {
+                  color: '#666',
+                  maxRotation: 45
+                }
+              }
+            },
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            }
+          }
+        });
+        
+        document.getElementById('denemeGrafikContainer').style.display = 'block';
+      }
+      
+      // Sayfa yüklendiğinde sınavları yükle
+      document.addEventListener('DOMContentLoaded', function() {
+        sinavlarYukle();
+      });
+      
+      // Modal fonksiyonları
+      function acModal(tur) {
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        
+        // Modal içeriğini ayarla
+        const modalIcerikleri = {
+          konular: {
+            title: '📊 Konular',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">📊</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Konular Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Ders konularınızı ve ilerleme durumunuzu burada takip edebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>�� İlerleme grafikleri</li>
+                    <li>📚 Konu listeleri</li>
+                    <li>🎯 Hedef belirleme</li>
+                    <li>📊 Performans analizi</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          basari: {
+            title: '🏆 Başarılarım',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">🏆</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Başarılarım Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Kazandığınız başarıları ve ödüllerinizi burada görebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>🏅 Başarı rozetleri</li>
+                    <li>📈 İstatistikler</li>
+                    <li>🎖️ Sertifikalar</li>
+                    <li>📊 Başarı geçmişi</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          kutuphane: {
+            title: '📚 Kütüphane',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">📚</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Kütüphane Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Dijital kütüphanenizdeki kaynaklara buradan erişebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>📖 E-kitaplar</li>
+                    <li>📄 Dökümanlar</li>
+                    <li>🔍 Arama sistemi</li>
+                    <li>📱 Mobil erişim</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          kulubler: {
+            title: '🏀 Kulüpler',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">🏀</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Kulüpler Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Okul kulüplerinizi ve etkinliklerinizi burada takip edebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>🏀 Spor kulüpleri</li>
+                    <li>🎨 Sanat kulüpleri</li>
+                    <li>🔬 Bilim kulüpleri</li>
+                    <li>📅 Etkinlik takvimi</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          saglik: {
+            title: '❤️ Sağlık',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">❤️</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Sağlık Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Sağlık bilgilerinizi ve kontrollerinizi burada takip edebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>�� Sağlık kontrolleri</li>
+                    <li>💊 İlaç takibi</li>
+                    <li>📊 Sağlık istatistikleri</li>
+                    <li>🔔 Hatırlatmalar</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          servis: {
+            title: '🚌 Öğrenci Servisi',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">🚌</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Öğrenci Servisi Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Servis bilgilerinizi ve güzergahları burada takip edebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>🚌 Servis güzergahları</li>
+                    <li>⏰ Hareket saatleri</li>
+                    <li>📍 Durak bilgileri</li>
+                    <li>📱 Canlı takip</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          'online-sinav': {
+            title: '💻 Online Sınavlar',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">💻</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Online Sınavlar Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Online sınavlarınızı buradan takip edebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>📝 Online sınavlar</li>
+                    <li>⏱️ Zamanlı sınavlar</li>
+                    <li>📊 Sonuç analizi</li>
+                    <li>📱 Mobil uyumlu</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          },
+          'online-hizmet': {
+            title: '🖱️ Online Hizmetler',
+            content: `
+              <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:64px; margin-bottom:20px;">🖱️</div>
+                <h3 style="color:#4a90e2; margin-bottom:15px;">Online Hizmetler Sayfası</h3>
+                <p style="color:#666; margin-bottom:25px;">Tüm online hizmetlere buradan erişebilirsiniz.</p>
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; margin-bottom:20px;">
+                  <h4 style="color:#333; margin-bottom:15px;">Özellikler:</h4>
+                  <ul style="text-align:left; color:#666; line-height:1.8;">
+                    <li>🌐 Web hizmetleri</li>
+                    <li>📱 Mobil uygulamalar</li>
+                    <li>💳 Online ödemeler</li>
+                    <li>📞 Destek hizmetleri</li>
+                  </ul>
+                </div>
+                <p style="color:#999; font-style:italic;">Bu özellik yakında eklenecek...</p>
+              </div>
+            `
+          }
+        };
+        
+        modalTitle.innerHTML = modalIcerikleri[tur].title;
+        modalBody.innerHTML = modalIcerikleri[tur].content;
+        
+        // Modal'ı göster
+        modalOverlay.style.display = 'block';
+        setTimeout(() => {
+          modalOverlay.classList.add('show');
+        }, 10);
+      }
+      
+      function kapatModal() {
+        const modalOverlay = document.getElementById('modalOverlay');
+        modalOverlay.classList.remove('show');
+        setTimeout(() => {
+          modalOverlay.style.display = 'none';
+        }, 300);
+      }
+      
+      // Modal dışına tıklandığında kapat
+      document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+          kapatModal();
+        }
+      });
+      
+      // ESC tuşu ile modal kapatma
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          kapatModal();
+        }
+      });
+
+      // Sayfa gösterme fonksiyonu
+      function sayfaGoster(sayfaAdi) {
+        // Tüm sayfaları gizle
+        const sayfalar = document.querySelectorAll('.sayfa');
+        sayfalar.forEach(sayfa => {
+          sayfa.style.display = 'none';
+        });
+        
+        // Dashboard'u gizle
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.style.display = 'none';
+        }
+        
+        // İstenen sayfayı göster
+        const hedefSayfa = document.getElementById(sayfaAdi);
+        if (hedefSayfa) {
+          hedefSayfa.style.display = 'block';
+        }
+      }
+    });
   </script>
 </body>
 </html> 
+
